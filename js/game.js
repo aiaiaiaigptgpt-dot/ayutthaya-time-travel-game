@@ -1,48 +1,29 @@
 const startScreen=document.getElementById('start-screen');
-const introScreen=document.getElementById('intro-screen');
 const gameScreen=document.getElementById('game-screen');
 const startBtn=document.getElementById('start-btn');
-const nextDialogueBtn=document.getElementById('next-dialogue-btn');
-const introImage=document.getElementById('intro-image');
-const speakerEl=document.getElementById('speaker');
-const dialogueText=document.getElementById('dialogue-text');
 const canvas=document.getElementById('game');
 const ctx=canvas.getContext('2d');
-const stageDialogue=document.getElementById('stage-dialogue');
-const stageSpeaker=document.getElementById('stage-speaker');
-const stageDialogueText=document.getElementById('stage-dialogue-text');
-const stageNextBtn=document.getElementById('stage-next-btn');
+const objective=document.getElementById('objective');
+const interactionPrompt=document.getElementById('interaction-prompt');
+const dialogueBox=document.getElementById('dialogue-box');
+const speakerEl=document.getElementById('speaker');
+const dialogueText=document.getElementById('dialogue-text');
+const dialogueNextBtn=document.getElementById('dialogue-next-btn');
+const leftBtn=document.getElementById('left-btn');
+const rightBtn=document.getElementById('right-btn');
+const interactBtn=document.getElementById('interact-btn');
 
-const introSteps=[
-  {image:'intro-school.png',speaker:'ผู้บรรยาย',text:'หลังเลิกเรียน นักเรียนกำลังเดินทางกลับบ้านตามปกติ...'},
-  {image:'intro-school.png',speaker:'นักเรียน',text:'วันนี้เหนื่อยจัง... รีบกลับบ้านดีกว่า'},
-  {image:'intro-road.png',speaker:'ผู้บรรยาย',text:'ระหว่างทาง นักเรียนเดินผ่านถนนใกล้โบราณสถานโดยไม่รู้เลยว่ากำลังจะเกิดเรื่องประหลาดขึ้น'},
-  {image:'pod-duang.png',speaker:'นักเรียน',text:'เอ๊ะ... นั่นอะไรน่ะ?'},
-  {image:'pod-duang.png',speaker:'นักเรียน',text:'เหมือนเหรียญ... แต่ทำไมรูปร่างแปลกจัง?'},
-  {image:'pod-duang.png',speaker:'นักเรียน',text:'นี่มันเงินอะไรนะ...?'},
-  {image:'pod-duang.png',speaker:'ผู้บรรยาย',text:'ทันใดนั้น เงินพดด้วงเริ่มเปล่งแสง และแสงรอบตัวก็สว่างขึ้นเรื่อย ๆ'},
-  {image:'pod-duang.png',speaker:'นักเรียน',text:'เดี๋ยวนะ... ทำไมมันมีแสง!? เกิดอะไรขึ้นเนี่ย!?'},
-  {image:'stage1-farm.png',speaker:'นักเรียน',text:'โอ๊ย... ที่นี่... ที่ไหน?'}
-];
-let introIndex=0;
+const backgrounds={
+  school:new Image(),
+  road:new Image(),
+  coin:new Image(),
+  farm:new Image()
+};
+backgrounds.school.src='intro-school.png';
+backgrounds.road.src='intro-road.png';
+backgrounds.coin.src='pod-duang.png';
+backgrounds.farm.src='stage1-farm.png';
 
-function showIntroStep(){
-  const step=introSteps[introIndex];
-  introImage.src=step.image;
-  speakerEl.textContent=step.speaker;
-  dialogueText.textContent=step.text;
-  nextDialogueBtn.textContent=introIndex===introSteps.length-1?'ไปต่อ ▶':'ถัดไป ▶';
-}
-
-const groundY=625;
-const player={x:-170,y:groundY-205,w:150,h:205};
-let walking=false;
-let stageStarted=false;
-let last=0;
-let animTime=0;
-
-const stageBg=new Image();
-stageBg.src='stage1-farm.png';
 const studentSheet=new Image();
 studentSheet.src='Male student .png';
 
@@ -56,14 +37,45 @@ const walkFrames=[
 ];
 const idleFrame={x:330,y:170,w:95,h:120};
 
-const stageDialogues=[
-  {speaker:'นักเรียน',text:'โอ๊ย... ที่นี่ที่ไหนเนี่ย?'},
-  {speaker:'นักเรียน',text:'ทำไมทุกอย่างดูเหมือนสมัยก่อนเลย...'},
-  {speaker:'นักเรียน',text:'ลองเดินไปถามคนแถวนี้ดีกว่า'}
+const scenes=[
+  {id:'school',bg:backgrounds.school,objective:'เดินไปทางขวาเพื่อกลับบ้าน',groundY:610,exitAt:1120},
+  {id:'road',bg:backgrounds.road,objective:'เดินต่อไปตามทาง',groundY:610,exitAt:1120},
+  {id:'coin',bg:backgrounds.coin,objective:'สำรวจสิ่งผิดปกติบนพื้น',groundY:610,interactionX:760},
+  {id:'farm',bg:backgrounds.farm,objective:'ลองเดินสำรวจพื้นที่รอบ ๆ',groundY:610}
 ];
-let stageDialogueIndex=0;
 
-function drawCoverImage(img){
+let sceneIndex=0;
+let last=0;
+let animTime=0;
+let dialogueIndex=0;
+let dialogueOpen=false;
+let coinTriggered=false;
+const keys={left:false,right:false};
+const player={x:150,y:0,w:145,h:195,speed:220,facing:1,moving:false};
+
+const coinDialogue=[
+  {speaker:'นักเรียน',text:'เอ๊ะ... นั่นอะไรนะ?'},
+  {speaker:'นักเรียน',text:'เหมือนเงินโบราณเลย... ลองดูใกล้ ๆ ดีกว่า'},
+  {speaker:'นักเรียน',text:'นี่มันเงินพดด้วงหรือเปล่านะ?'},
+  {speaker:'นักเรียน',text:'เดี๋ยวนะ... ทำไมมันมีแสง!?'},
+  {speaker:'นักเรียน',text:'เกิดอะไรขึ้นเนี่ย!?'}
+];
+
+function currentScene(){return scenes[sceneIndex];}
+
+function resetPlayerForScene(){
+  player.x=150;
+  player.y=currentScene().groundY-player.h;
+  interactionPrompt.classList.add('hidden');
+  objective.textContent=currentScene().objective;
+}
+
+function drawCover(img){
+  if(!(img.complete&&img.naturalWidth>0)){
+    ctx.fillStyle='#77bff3';
+    ctx.fillRect(0,0,canvas.width,canvas.height);
+    return;
+  }
   const scale=Math.max(canvas.width/img.naturalWidth,canvas.height/img.naturalHeight);
   const sw=canvas.width/scale;
   const sh=canvas.height/scale;
@@ -74,86 +86,130 @@ function drawCoverImage(img){
 
 function drawPlayer(){
   if(!(studentSheet.complete&&studentSheet.naturalWidth>0)) return;
-  const frame=walking
-    ? walkFrames[Math.floor(animTime*8)%walkFrames.length]
-    : idleFrame;
-  ctx.drawImage(studentSheet,frame.x,frame.y,frame.w,frame.h,player.x,player.y,player.w,player.h);
+  const frame=player.moving?walkFrames[Math.floor(animTime*9)%walkFrames.length]:idleFrame;
+  ctx.save();
+  if(player.facing<0){
+    ctx.translate(player.x+player.w,0);
+    ctx.scale(-1,1);
+    ctx.drawImage(studentSheet,frame.x,frame.y,frame.w,frame.h,0,player.y,player.w,player.h);
+  }else{
+    ctx.drawImage(studentSheet,frame.x,frame.y,frame.w,frame.h,player.x,player.y,player.w,player.h);
+  }
+  ctx.restore();
 }
 
-function updateStage(dt){
+function update(dt){
   animTime+=dt;
-  if(walking){
-    player.x+=95*dt;
-    if(player.x>=250){
-      player.x=250;
-      walking=false;
-      showStageDialogue(0);
+  if(dialogueOpen){player.moving=false;return;}
+
+  let dir=0;
+  if(keys.left) dir-=1;
+  if(keys.right) dir+=1;
+  player.moving=dir!==0;
+
+  if(dir!==0){
+    player.facing=dir;
+    player.x+=dir*player.speed*dt;
+    player.x=Math.max(20,Math.min(canvas.width-player.w-20,player.x));
+  }
+
+  const scene=currentScene();
+
+  if(scene.id==='school'||scene.id==='road'){
+    if(player.x>=scene.exitAt){
+      sceneIndex+=1;
+      resetPlayerForScene();
+    }
+  }
+
+  if(scene.id==='coin'){
+    const nearCoin=Math.abs((player.x+player.w/2)-scene.interactionX)<140;
+    if(nearCoin&&!coinTriggered){
+      interactionPrompt.textContent='กด E หรือ “คุย / ตรวจดู” เพื่อตรวจดู';
+      interactionPrompt.classList.remove('hidden');
+    }else{
+      interactionPrompt.classList.add('hidden');
     }
   }
 }
 
-function drawStage(){
-  ctx.clearRect(0,0,canvas.width,canvas.height);
-  if(stageBg.complete&&stageBg.naturalWidth>0){
-    drawCoverImage(stageBg);
-  }else{
-    ctx.fillStyle='#8fd0ff';
-    ctx.fillRect(0,0,canvas.width,canvas.height);
-  }
+function draw(){
+  const scene=currentScene();
+  drawCover(scene.bg);
   drawPlayer();
 }
 
-function stageLoop(t){
-  if(!stageStarted) return;
+function loop(t){
   const dt=Math.min((t-last)/1000||0,0.033);
   last=t;
-  updateStage(dt);
-  drawStage();
-  requestAnimationFrame(stageLoop);
+  update(dt);
+  draw();
+  requestAnimationFrame(loop);
 }
 
-function showStageDialogue(index){
-  const item=stageDialogues[index];
-  stageSpeaker.textContent=item.speaker;
-  stageDialogueText.textContent=item.text;
-  stageDialogue.classList.remove('hidden');
-  stageNextBtn.textContent=index===stageDialogues.length-1?'เดินต่อ ▶':'ถัดไป ▶';
+function openDialogue(items,index=0){
+  dialogueOpen=true;
+  dialogueIndex=index;
+  const item=items[dialogueIndex];
+  speakerEl.textContent=item.speaker;
+  dialogueText.textContent=item.text;
+  dialogueBox.classList.remove('hidden');
+  dialogueNextBtn.textContent=dialogueIndex===items.length-1?'ไปต่อ ▶':'ถัดไป ▶';
+  dialogueNextBtn.onclick=()=>{
+    if(dialogueIndex<items.length-1){
+      dialogueIndex+=1;
+      const next=items[dialogueIndex];
+      speakerEl.textContent=next.speaker;
+      dialogueText.textContent=next.text;
+      dialogueNextBtn.textContent=dialogueIndex===items.length-1?'ไปต่อ ▶':'ถัดไป ▶';
+    }else{
+      dialogueBox.classList.add('hidden');
+      dialogueOpen=false;
+      if(currentScene().id==='coin'){
+        coinTriggered=true;
+        sceneIndex=3;
+        resetPlayerForScene();
+        objective.textContent='เกิดอะไรขึ้น...? ลองเดินสำรวจดู';
+      }
+    }
+  };
 }
 
-function startStageOne(){
-  introScreen.classList.add('hidden');
-  gameScreen.classList.remove('hidden');
-  player.x=-170;
-  walking=true;
-  stageStarted=true;
-  stageDialogueIndex=0;
-  stageDialogue.classList.add('hidden');
-  last=performance.now();
-  requestAnimationFrame(stageLoop);
+function interact(){
+  if(dialogueOpen){dialogueNextBtn.click();return;}
+  const scene=currentScene();
+  if(scene.id==='coin'&&!coinTriggered){
+    const nearCoin=Math.abs((player.x+player.w/2)-scene.interactionX)<140;
+    if(nearCoin) openDialogue(coinDialogue);
+  }
 }
+
+function setHeld(key,value){keys[key]=value;}
+
+window.addEventListener('keydown',e=>{
+  if(e.code==='ArrowLeft'||e.code==='KeyA'){e.preventDefault();setHeld('left',true);}
+  if(e.code==='ArrowRight'||e.code==='KeyD'){e.preventDefault();setHeld('right',true);}
+  if(e.code==='KeyE'||e.code==='Space'||e.code==='Enter'){e.preventDefault();interact();}
+});
+window.addEventListener('keyup',e=>{
+  if(e.code==='ArrowLeft'||e.code==='KeyA') setHeld('left',false);
+  if(e.code==='ArrowRight'||e.code==='KeyD') setHeld('right',false);
+});
+
+function bindHoldButton(button,key){
+  ['pointerdown','touchstart'].forEach(type=>button.addEventListener(type,e=>{e.preventDefault();setHeld(key,true);}));
+  ['pointerup','pointercancel','pointerleave','touchend'].forEach(type=>button.addEventListener(type,e=>{e.preventDefault();setHeld(key,false);}));
+}
+bindHoldButton(leftBtn,'left');
+bindHoldButton(rightBtn,'right');
+interactBtn.addEventListener('click',interact);
 
 startBtn.addEventListener('click',()=>{
   startScreen.classList.add('hidden');
-  introScreen.classList.remove('hidden');
-  introIndex=0;
-  showIntroStep();
-});
-
-nextDialogueBtn.addEventListener('click',()=>{
-  if(introIndex<introSteps.length-1){
-    introIndex+=1;
-    showIntroStep();
-  }else{
-    startStageOne();
-  }
-});
-
-stageNextBtn.addEventListener('click',()=>{
-  if(stageDialogueIndex<stageDialogues.length-1){
-    stageDialogueIndex+=1;
-    showStageDialogue(stageDialogueIndex);
-  }else{
-    stageDialogue.classList.add('hidden');
-    walking=true;
-  }
+  gameScreen.classList.remove('hidden');
+  sceneIndex=0;
+  coinTriggered=false;
+  resetPlayerForScene();
+  last=performance.now();
+  requestAnimationFrame(loop);
 });
