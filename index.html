@@ -10,29 +10,33 @@
   <main class="app">
     <section id="start-screen" class="panel">
       <h1>ย้อนเวลาสู่กรุงศรีอยุธยา</h1>
-      <p>เกมผจญภัยเรียนรู้ประวัติศาสตร์อยุธยา</p>
-      <button id="start-btn">เริ่มเกม</button>
-    </section>
-
-    <section id="intro-screen" class="hidden">
-      <div class="intro-frame">
-        <img id="intro-image" src="intro-school.png" alt="ฉากเปิดเรื่อง" />
-        <div class="dialogue-box">
-          <div id="speaker" class="speaker">ผู้บรรยาย</div>
-          <div id="dialogue-text" class="dialogue-text"></div>
-          <button id="next-dialogue-btn">ถัดไป ▶</button>
-        </div>
-      </div>
+      <p>เกมผจญภัยสำรวจประวัติศาสตร์</p>
+      <button id="start-btn">เริ่มเรื่อง</button>
     </section>
 
     <section id="game-screen" class="hidden">
       <div class="story-stage">
         <canvas id="game" width="1280" height="720"></canvas>
-        <div id="stage-dialogue" class="dialogue-box hidden">
-          <div id="stage-speaker" class="speaker">นักเรียน</div>
-          <div id="stage-dialogue-text" class="dialogue-text"></div>
-          <button id="stage-next-btn">ถัดไป ▶</button>
+
+        <div id="objective" class="objective">เดินไปทางขวาเพื่อกลับบ้าน</div>
+        <div id="interaction-prompt" class="interaction-prompt hidden">กด E เพื่อโต้ตอบ</div>
+
+        <div id="dialogue-box" class="dialogue-box hidden">
+          <div id="speaker" class="speaker">นักเรียน</div>
+          <div id="dialogue-text" class="dialogue-text"></div>
+          <button id="dialogue-next-btn">ถัดไป ▶</button>
         </div>
+      </div>
+
+      <div class="control-help">
+        <span>เดิน: ← → หรือ A / D</span>
+        <span>โต้ตอบ: E</span>
+      </div>
+
+      <div class="touch-controls">
+        <button id="left-btn" aria-label="เดินซ้าย">◀</button>
+        <button id="interact-btn">คุย / ตรวจดู</button>
+        <button id="right-btn" aria-label="เดินขวา">▶</button>
       </div>
     </section>
   </main>
