@@ -10,8 +10,19 @@
   <main class="app">
     <section id="start-screen" class="panel">
       <h1>ย้อนเวลาสู่กรุงศรีอยุธยา</h1>
-      <p>เกมต้นแบบ 2D Side-scrolling Auto-runner</p>
+      <p>เกมผจญภัยเรียนรู้ประวัติศาสตร์อยุธยา</p>
       <button id="start-btn">เริ่มเกม</button>
+    </section>
+
+    <section id="intro-screen" class="hidden">
+      <div class="intro-frame">
+        <img id="intro-image" src="intro-school.png" alt="ฉากเปิดเรื่อง" />
+        <div class="dialogue-box">
+          <div id="speaker" class="speaker">ผู้บรรยาย</div>
+          <div id="dialogue-text" class="dialogue-text"></div>
+          <button id="next-dialogue-btn">ถัดไป ▶</button>
+        </div>
+      </div>
     </section>
 
     <section id="game-screen" class="hidden">
