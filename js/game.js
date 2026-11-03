@@ -6,12 +6,15 @@ const scoreEl=document.getElementById('score');
 const canvas=document.getElementById('game');
 const ctx=canvas.getContext('2d');
 
-const groundY=560;
+const groundY=600;
 const player={x:180,y:groundY-90,w:58,h:90,vy:0,onGround:true};
 let running=false;
 let score=0;
 let worldX=0;
 let last=0;
+
+const stageBg=new Image();
+stageBg.src='stage1-farm.png';
 
 function resetGame(){
   player.y=groundY-player.h;
@@ -29,7 +32,7 @@ function jump(){
 }
 
 function update(dt){
-  worldX+=220*dt;
+  worldX+=90*dt;
   score+=dt*10;
   scoreEl.textContent=Math.floor(score);
   player.vy+=1900*dt;
@@ -43,23 +46,29 @@ function update(dt){
 
 function drawBackground(){
   ctx.clearRect(0,0,canvas.width,canvas.height);
-  const sky=ctx.createLinearGradient(0,0,0,groundY);
-  sky.addColorStop(0,'#58aef7');
-  sky.addColorStop(1,'#d8f2ff');
-  ctx.fillStyle=sky;
-  ctx.fillRect(0,0,canvas.width,groundY);
 
-  ctx.fillStyle='#2d9144';
-  ctx.fillRect(0,groundY,canvas.width,canvas.height-groundY);
-
-  ctx.fillStyle='#8b5a2b';
-  const offset=-(worldX%180);
-  for(let x=offset;x<canvas.width+180;x+=180){
-    ctx.fillRect(x,groundY-45,110,45);
+  if(stageBg.complete && stageBg.naturalWidth>0){
+    const scale=Math.max(canvas.width/stageBg.naturalWidth,canvas.height/stageBg.naturalHeight);
+    const sw=canvas.width/scale;
+    const sh=canvas.height/scale;
+    const maxX=Math.max(0,stageBg.naturalWidth-sw);
+    const sx=maxX===0?0:(worldX*0.45)%maxX;
+    const sy=Math.max(0,(stageBg.naturalHeight-sh)/2);
+    ctx.drawImage(stageBg,sx,sy,sw,sh,0,0,canvas.width,canvas.height);
+  }else{
+    const sky=ctx.createLinearGradient(0,0,0,groundY);
+    sky.addColorStop(0,'#58aef7');
+    sky.addColorStop(1,'#d8f2ff');
+    ctx.fillStyle=sky;
+    ctx.fillRect(0,0,canvas.width,canvas.height);
   }
+
+  ctx.fillStyle='rgba(0,0,0,0.10)';
+  ctx.fillRect(0,groundY,canvas.width,canvas.height-groundY);
 }
 
 function drawPlayer(){
+  ctx.save();
   ctx.fillStyle='#ffffff';
   ctx.fillRect(player.x,player.y,player.w,player.h);
   ctx.fillStyle='#264c9b';
@@ -67,6 +76,7 @@ function drawPlayer(){
   ctx.fillStyle='#222';
   ctx.fillRect(player.x+10,player.y+20,8,8);
   ctx.fillRect(player.x+38,player.y+20,8,8);
+  ctx.restore();
 }
 
 function loop(t){
