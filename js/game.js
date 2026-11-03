@@ -7,14 +7,29 @@ const canvas=document.getElementById('game');
 const ctx=canvas.getContext('2d');
 
 const groundY=600;
-const player={x:180,y:groundY-90,w:58,h:90,vy:0,onGround:true};
+const player={x:180,y:groundY-125,w:92,h:125,vy:0,onGround:true};
 let running=false;
 let score=0;
 let worldX=0;
 let last=0;
+let animTime=0;
 
 const stageBg=new Image();
 stageBg.src='stage1-farm.png';
+
+const studentSheet=new Image();
+studentSheet.src='Male student .png';
+
+// ตำแหน่งเฟรมโดยประมาณจาก Sprite Sheet นักเรียนชาย
+const runFrames=[
+  {x:500,y:330,w:95,h:120},
+  {x:600,y:330,w:95,h:120},
+  {x:700,y:330,w:95,h:120},
+  {x:800,y:330,w:95,h:120},
+  {x:900,y:330,w:95,h:120},
+  {x:1000,y:330,w:95,h:120}
+];
+const jumpFrame={x:430,y:500,w:105,h:125};
 
 function resetGame(){
   player.y=groundY-player.h;
@@ -22,6 +37,7 @@ function resetGame(){
   player.onGround=true;
   score=0;
   worldX=0;
+  animTime=0;
   scoreEl.textContent='0';
 }
 
@@ -33,6 +49,7 @@ function jump(){
 
 function update(dt){
   worldX+=90*dt;
+  animTime+=dt;
   score+=dt*10;
   scoreEl.textContent=Math.floor(score);
   player.vy+=1900*dt;
@@ -52,7 +69,7 @@ function drawBackground(){
     const sw=canvas.width/scale;
     const sh=canvas.height/scale;
     const maxX=Math.max(0,stageBg.naturalWidth-sw);
-    const sx=maxX===0?0:(worldX*0.45)%maxX;
+    const sx=maxX===0?0:(worldX*0.45)%Math.max(1,maxX);
     const sy=Math.max(0,(stageBg.naturalHeight-sh)/2);
     ctx.drawImage(stageBg,sx,sy,sw,sh,0,0,canvas.width,canvas.height);
   }else{
@@ -63,20 +80,29 @@ function drawBackground(){
     ctx.fillRect(0,0,canvas.width,canvas.height);
   }
 
-  ctx.fillStyle='rgba(0,0,0,0.10)';
+  ctx.fillStyle='rgba(0,0,0,0.08)';
   ctx.fillRect(0,groundY,canvas.width,canvas.height-groundY);
 }
 
 function drawPlayer(){
-  ctx.save();
-  ctx.fillStyle='#ffffff';
-  ctx.fillRect(player.x,player.y,player.w,player.h);
-  ctx.fillStyle='#264c9b';
-  ctx.fillRect(player.x,player.y+48,player.w,42);
-  ctx.fillStyle='#222';
-  ctx.fillRect(player.x+10,player.y+20,8,8);
-  ctx.fillRect(player.x+38,player.y+20,8,8);
-  ctx.restore();
+  if(studentSheet.complete && studentSheet.naturalWidth>0){
+    let frame;
+    if(player.onGround){
+      const index=Math.floor(animTime*10)%runFrames.length;
+      frame=runFrames[index];
+    }else{
+      frame=jumpFrame;
+    }
+
+    ctx.drawImage(
+      studentSheet,
+      frame.x,frame.y,frame.w,frame.h,
+      player.x,player.y,player.w,player.h
+    );
+  }else{
+    ctx.fillStyle='#fff';
+    ctx.fillRect(player.x,player.y,player.w,player.h);
+  }
 }
 
 function loop(t){
