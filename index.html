@@ -26,13 +26,13 @@
     </section>
 
     <section id="game-screen" class="hidden">
-      <div class="hud">
-        <span>ด่าน 1: ชนบทอยุธยา</span>
-        <span>คะแนน: <b id="score">0</b></span>
-      </div>
-      <canvas id="game" width="1280" height="720"></canvas>
-      <div class="controls">
-        <button id="jump-btn">กระโดด</button>
+      <div class="story-stage">
+        <canvas id="game" width="1280" height="720"></canvas>
+        <div id="stage-dialogue" class="dialogue-box hidden">
+          <div id="stage-speaker" class="speaker">นักเรียน</div>
+          <div id="stage-dialogue-text" class="dialogue-text"></div>
+          <button id="stage-next-btn">ถัดไป ▶</button>
+        </div>
       </div>
     </section>
   </main>
