@@ -149,42 +149,20 @@ function drawBackground(){
  ctx.drawImage(img,0,0,img.naturalWidth,img.naturalHeight,0,0,1280,720);
  return 0;
 }
-const walkFrameMetrics=new WeakMap();
-function getWalkFrameBottoms(img){
- if(walkFrameMetrics.has(img))return walkFrameMetrics.get(img);
- const count=6,w=img.naturalWidth,h=img.naturalHeight;
- const scratch=document.createElement('canvas');
- scratch.width=w;scratch.height=h;
- const scratchCtx=scratch.getContext('2d',{willReadFrequently:true});
- scratchCtx.drawImage(img,0,0);
- const pixels=scratchCtx.getImageData(0,0,w,h).data;
- const bottoms=[];
- for(let i=0;i<count;i++){
-  const x0=Math.round(i*w/count),x1=Math.round((i+1)*w/count);
-  let bottom=h;
-  for(let y=h-1;y>=0;y--){
-   let found=false;
-   for(let x=x0;x<x1;x++){
-    if(pixels[(y*w+x)*4+3]>8){bottom=y+1;found=true;break;}
-   }
-   if(found)break;
-  }
-  bottoms.push(bottom);
- }
- walkFrameMetrics.set(img,bottoms);
- return bottoms;
-}
 function drawWalkSprite(img,frameIndex,x,ground,width,height,facing){
  if(!img.complete||!img.naturalWidth)return false;
- // Crop the six frames evenly, then align the lowest visible foot in every frame to one ground line.
+ // Per-frame source foot lines measured from the six-frame transparent sprite sheets.
+ const bottoms=selectedGender==='girl'
+  ?[661,667,670,660,662,661]
+  :[654,658,664,662,652,656];
  const count=6,w=img.naturalWidth,h=img.naturalHeight;
  const sx=Math.round(frameIndex*w/count),ex=Math.round((frameIndex+1)*w/count);
- const bottoms=getWalkFrameBottoms(img);
- const scaleY=height/h;
- const alignedTop=-bottoms[frameIndex]*scaleY;
+ const sourceBottom=bottoms[frameIndex]||h;
+ const alignedTop=-(sourceBottom/h)*height;
  ctx.save();
  ctx.translate(Math.round(x),Math.round(ground));
  if(facing<0)ctx.scale(-1,1);
+ // Align the visible foot line instead of the transparent image canvas edge.
  ctx.drawImage(img,sx,0,ex-sx,h,-width/2,alignedTop,width,height);
  ctx.restore();
  return true;
