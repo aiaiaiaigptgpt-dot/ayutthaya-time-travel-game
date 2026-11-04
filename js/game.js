@@ -43,6 +43,16 @@ $('name-form').addEventListener('submit',e=>{
 function genderWord(boy,girl){return selectedGender==='girl'?girl:boy;}
 function student(text,emotion='normal'){return{who:'student',emotion,text};}
 function npc(text,emotion='normal'){return{who:'farmer',emotion,text};}
+// เพิ่มปุ่มย้อนกลับ โดยคงปุ่มถัดไปเดิมไว้เพียงสองปุ่ม
+const previousBtn=document.createElement('button');
+previousBtn.type='button';
+previousBtn.id='dialogue-prev-btn';
+previousBtn.textContent='◀ ย้อนกลับ';
+previousBtn.className=nextBtn.className;
+previousBtn.disabled=true;
+previousBtn.setAttribute('aria-label','ย้อนกลับไปอ่านข้อความก่อนหน้า');
+nextBtn.parentNode.insertBefore(previousBtn,nextBtn);
+
 function showDialogueLine(){
  const d=dialogue[dialogueIndex];
  dialogueBox.classList.toggle('farmer-speaking',d.who==='farmer');
@@ -50,7 +60,14 @@ function showDialogueLine(){
  dialogueText.textContent=typeof d.text==='function'?d.text():d.text;
  portrait.src=d.who==='farmer'?'farmer-'+d.emotion+'.png':'student-'+selectedGender+'-'+d.emotion+'.png';
  portrait.alt=speaker.textContent;
+ previousBtn.disabled=dialogueIndex===0;
+ previousBtn.classList.toggle('hidden',dialogueIndex===0);
  nextBtn.textContent=dialogueIndex===dialogue.length-1?'ปิดบทสนทนา ▶':'ถัดไป ▶';
+}
+function goBackDialogue(){
+ if(!dialogue||dialogueIndex===0)return;
+ dialogueIndex--;
+ showDialogueLine();
 }
 function openDialogue(lines,done){
  keys.left=keys.right=false;player.moving=false;
@@ -63,6 +80,7 @@ function advanceDialogue(){
  dialogue=null;dialogueBox.classList.add('hidden');
  const done=dialogueDone;dialogueDone=null;if(done)done();
 }
+previousBtn.addEventListener('click',goBackDialogue);
 nextBtn.addEventListener('click',advanceDialogue);
 function startGame(){
  showScreen('game-screen');sceneIndex=0;coinFound=false;farmerTalked=false;quizActive=false;quizShowingResult=false;quizRetrying=false;stage1Passed=false;player.x=150;
