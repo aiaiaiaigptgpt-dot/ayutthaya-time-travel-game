@@ -94,7 +94,7 @@ function advanceDialogue(){
 previousBtn.addEventListener('click',goBackDialogue);
 nextBtn.addEventListener('click',advanceDialogue);
 function startGame(){
- showScreen('game-screen');sceneIndex=0;coinFound=false;farmerTalked=false;quizActive=false;quizShowingResult=false;quizRetrying=false;stage1Passed=false;farmIntroSeen=false;player.x=150;
+ showScreen('game-screen');sceneIndex=0;coinFound=false;farmerTalked=false;quizActive=false;quizShowingResult=false;quizRetrying=false;stage1Passed=false;stage2Passed=false;farmIntroSeen=false;player.x=150;
  objective.textContent=scenes[0].objective;prompt.classList.add('hidden');
  if(!started){started=true;last=performance.now();requestAnimationFrame(frame);}
  openDialogue([
@@ -311,8 +311,16 @@ function finishFarmerQuiz(){
  quizNextBtn.classList.remove('hidden');
 }
 quizNextBtn.addEventListener('click',()=>{
- if(quizShowingResult&&quizHeading.textContent.includes('ด่านที่ ๒')){
-  quizPanel.classList.add('hidden');quizActive=false;return;
+ const isBoatQuiz=quizHeading.textContent.includes('ด่านที่ ๒')||quizHeading.textContent.includes('สรุปผลด่านที่ ๒');
+ if(isBoatQuiz){
+  if(quizShowingResult){
+   quizPanel.classList.add('hidden');quizActive=false;
+   objective.textContent='ด่านที่ ๒ สำเร็จแล้ว เดินทางต่อหรือย้อนกลับไปสำรวจได้';
+   return;
+  }
+  if(quizIndex<boatQuiz.length-1){quizIndex++;renderBoatQuizQuestion();}
+  else finishBoatQuiz();
+  return;
  }
  if(quizShowingResult){
   quizPanel.classList.add('hidden');quizActive=false;
