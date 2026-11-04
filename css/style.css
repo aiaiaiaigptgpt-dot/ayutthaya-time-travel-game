@@ -23,8 +23,13 @@ button:disabled{opacity:.55;cursor:not-allowed}
 .objective{position:absolute;top:2%;left:2%;background:#24152cdd;border:2px solid #f6ce7a;padding:10px 15px;border-radius:12px;font-size:clamp(12px,1.5vw,19px);font-weight:700}
 .interaction-prompt{position:absolute;bottom:29%;left:50%;transform:translateX(-50%);border:2px solid #ffe493;border-radius:20px;padding:9px 16px;background:#24132ded;font-size:clamp(12px,1.5vw,18px);font-weight:800;white-space:nowrap}
 .dialogue-box{position:absolute;bottom:2%;left:2%;right:2%;height:29%;min-height:140px;border:3px solid #f5c766;border-radius:17px;background:#25152dee;display:flex;overflow:hidden;box-shadow:0 0 22px #110a1a;backdrop-filter:blur(3px)}
-.dialogue-box.farmer-speaking{flex-direction:row-reverse}
-.dialogue-box.farmer-speaking .dialogue-content{padding:12px 4px 8px 18px}
+/* ตัวละครที่พูดอยู่ซ้าย ส่วนนักเรียนอยู่ขวาและหันเข้าหาข้อความ */
+.dialogue-box.farmer-speaking,.dialogue-box.boatman-speaking{flex-direction:row}
+.dialogue-box.student-speaking{flex-direction:row-reverse}
+.dialogue-box.student-speaking .dialogue-content{padding:12px 4px 8px 18px}
+.dialogue-box.farmer-speaking .dialogue-content,.dialogue-box.boatman-speaking .dialogue-content{padding:12px 18px 8px 4px}
+.dialogue-box.student-speaking .dialogue-portrait{transform:scaleX(-1)}
+.dialogue-box.farmer-speaking .dialogue-portrait,.dialogue-box.boatman-speaking .dialogue-portrait{transform:none}
 .dialogue-portrait{width:21%;height:100%;object-fit:contain;object-position:bottom center;image-rendering:pixelated;align-self:flex-end}
 .dialogue-content{flex:1;min-width:0;padding:12px 18px 8px 4px;display:flex;flex-direction:column}
 .speaker{color:#ffe18d;font-size:clamp(14px,1.8vw,24px);font-weight:800}
@@ -38,7 +43,7 @@ button:disabled{opacity:.55;cursor:not-allowed}
 .touch-controls{display:flex;gap:12px;justify-content:center;margin-top:8px}
 .touch-controls button{min-width:90px;border:2px solid #cb9d52;background:#36204a;color:#fff;border-radius:12px;padding:11px 20px;font-size:18px;font-weight:800}
 #interact-btn{min-width:165px}
-@media(max-width:650px){.screen{border-radius:4px}.fantasy-btn{padding:7px 10px;border-width:2px;border-radius:7px}.choice span{font-size:9px;padding:3px 4px}.selection-label{font-size:10px;padding:4px}.name-form{top:49%;gap:7px}.name-form input{min-width:120px;padding:6px;font-size:13px}.dialogue-box{height:38%;min-height:0}.dialogue-portrait{width:24%}.dialogue-content{padding:5px 8px 3px 0}.dialogue-box.farmer-speaking .dialogue-content{padding:5px 0 3px 8px}.dialogue-text{font-size:11px}.dialogue-nav{gap:6px;padding-top:4px}.dialogue-nav button{padding:3px 8px;font-size:10px}.touch-controls button{padding:9px;min-width:64px;font-size:14px}#interact-btn{min-width:120px}.control-help{font-size:11px}.interaction-prompt{bottom:42%}}
+@media(max-width:650px){.screen{border-radius:4px}.fantasy-btn{padding:7px 10px;border-width:2px;border-radius:7px}.choice span{font-size:9px;padding:3px 4px}.selection-label{font-size:10px;padding:4px}.name-form{top:49%;gap:7px}.name-form input{min-width:120px;padding:6px;font-size:13px}.dialogue-box{height:38%;min-height:0}.dialogue-portrait{width:24%}.dialogue-content{padding:5px 8px 3px 0}.dialogue-box.farmer-speaking .dialogue-content,.dialogue-box.boatman-speaking .dialogue-content{padding:5px 8px 3px 0}.dialogue-box.student-speaking .dialogue-content{padding:5px 0 3px 8px}.dialogue-text{font-size:11px}.dialogue-nav{gap:6px;padding-top:4px}.dialogue-nav button{padding:3px 8px;font-size:10px}.touch-controls button{padding:9px;min-width:64px;font-size:14px}#interact-btn{min-width:120px}.control-help{font-size:11px}.interaction-prompt{bottom:42%}}
 /* Level 1 knowledge check */
 .quiz-panel{position:absolute;inset:0;z-index:5;display:grid;place-items:center;padding:3%;background:#10091dcc}
 .quiz-card{width:min(850px,94%);max-height:94%;overflow:auto;padding:clamp(16px,3vw,30px);border:3px solid #f2c76c;border-radius:20px;background:linear-gradient(145deg,#352044f7,#1b142cf7);box-shadow:0 12px 40px #090510cc}
