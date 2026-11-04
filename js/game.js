@@ -16,8 +16,7 @@ const player={x:150,w:150,h:270,speed:320,facing:1,moving:false};
 const farmer={x:1000,w:168,h:247};
 const images={};
 function image(path){if(!images[path]){const img=new Image();img.src=path;images[path]=img;}return images[path];}
-['intro-school.png','intro-road.png','pod-duang.png','stage1-farm.png','farmer-normal.png','farmer-smile.png','farmer-explain.png','farmer-point.png',
-'student-boy-normal.png','student-girl-normal.png','student-boy-walk.png','student-girl-walk.png','farmer-idle.png'].forEach(image);
+// โหลดภาพแบบ Lazy Loading: โหลดเมื่อฉากหรือบทสนทนาต้องใช้จริงเท่านั้น
 const scenes=[
  {id:'school',bg:'intro-school.png',objective:'เดินไปทางขวาเพื่อกลับบ้าน'},
  {id:'road',bg:'intro-road.png',objective:'เดินต่อไปตามทางกลับบ้าน'},
