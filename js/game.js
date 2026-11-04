@@ -14,6 +14,7 @@ let started=false,last=0,animationTime=0,coinFound=false,farmerTalked=false,quiz
 const worldWidth=1280;
 const player={x:150,w:150,h:270,speed:320,facing:1,moving:false};
 const farmer={x:1000,w:168,h:247};
+const merchant={x:1040,w:190,h:270};
 const images={};
 function image(path){if(!images[path]){const img=new Image();img.src=path;images[path]=img;}return images[path];}
 // โหลดภาพแบบ Lazy Loading: โหลดเมื่อฉากหรือบทสนทนาต้องใช้จริงเท่านั้น
@@ -22,7 +23,8 @@ const scenes=[
  {id:'road',bg:'intro-road.png',objective:'เดินต่อไปตามทางกลับบ้าน'},
  {id:'coin',bg:'pod-duang.png',objective:'มีบางอย่างแปลก ๆ อยู่บนพื้น ลองเดินไปสำรวจ'},
  {id:'farm',bg:'stage1-farm.png',objective:'นี่คือที่ไหนกันนะ? เดินไปถามชาวนาดูสิ'},
- {id:'boat',bg:null,objective:'ด่านที่ ๒ : การเดินทางทางเรือเข้าสู่พระนคร'}
+ {id:'boat',bg:null,objective:'ด่านที่ ๒ : การเดินทางทางเรือเข้าสู่พระนคร'},
+ {id:'market',bg:'marketplace-bg.jpg',objective:'ด่านที่ ๓ : สำรวจตลาดในกรุงศรีอยุธยา'}
 ];
 function showScreen(id){for(const s of screens)$(s).classList.toggle('hidden',s!==id);$('controls').classList.toggle('hidden',id!=='game-screen');}
 $('start-btn').addEventListener('click',()=>showScreen('select-screen'));
@@ -61,15 +63,17 @@ function showDialogueLine(){
  const d=dialogue[dialogueIndex];
  dialogueBox.classList.toggle('farmer-speaking',d.who==='farmer');
  dialogueBox.classList.toggle('boatman-speaking',d.who==='boatman');
+ dialogueBox.classList.toggle('merchant-speaking',d.who==='merchant');
  dialogueBox.classList.toggle('student-speaking',d.who==='student');
  // นักเรียนอยู่ซ้ายในฉากเปิดเกมและด่านชาวนา แต่ย้ายไปขวาเฉพาะด่านเรือ
- dialogueBox.classList.toggle('student-left',d.who==='student'&&sceneIndex!==4);
- dialogueBox.classList.toggle('student-right',d.who==='student'&&sceneIndex===4);
- speaker.textContent=d.who==='farmer'?'ชาวนา':d.who==='boatman'?'คนพายเรือ':playerName;
+ dialogueBox.classList.toggle('student-left',d.who==='student'&&sceneIndex!==4&&sceneIndex!==5);
+ dialogueBox.classList.toggle('student-right',d.who==='student'&&(sceneIndex===4||sceneIndex===5));
+ speaker.textContent=d.who==='farmer'?'ชาวนา':d.who==='boatman'?'คนพายเรือ':d.who==='merchant'?'แม่ค้า':playerName;
  dialogueText.textContent=typeof d.text==='function'?d.text():d.text;
  portrait.classList.remove('hidden');
  if(d.who==='farmer')portrait.src='farmer-'+d.emotion+'.png';
  else if(d.who==='boatman')portrait.src='boatman-'+(d.emotion==='smile'?'greeting':d.emotion)+'.png';
+ else if(d.who==='merchant')portrait.src='merchant-'+d.emotion+'.png';
  else portrait.src='student-'+selectedGender+'-'+d.emotion+'.png';
  portrait.alt=speaker.textContent;
  previousBtn.disabled=dialogueIndex===0;
@@ -205,6 +209,21 @@ function boatJourneyLines(){
  ];
 }
 
+// ===== บทสนทนาด่านที่ ๓: ตลาดในกรุงศรีอยุธยา =====
+function merchantLines(){
+ return [
+  {who:'merchant',emotion:'smile',text:'เชิญจ้ะ เชิญเลือกชมสินค้าได้เลย วันนี้มีของสด ๆ มาขายมากมาย'},
+  student(()=>genderWord('สวัสดีครับ ตลาดแห่งนี้คึกคักมากเลย มีสินค้าหลายอย่างให้เลือกเต็มไปหมด','สวัสดีค่ะ ตลาดแห่งนี้คึกคักมากเลย มีสินค้าหลายอย่างให้เลือกเต็มไปหมด'),'curious'),
+  {who:'merchant',emotion:'explain',text:'ใช่แล้วจ้ะ พ่อหนุ่มแม่หนู ที่นี่มีทั้งข้าว ผลไม้ ผัก ปลา และของกินของใช้ที่ผู้คนนำมาซื้อขายแลกเปลี่ยนกัน'},
+  student(()=>genderWord('แม่ค้ารับสินค้ามาจากที่ไหนบ้างครับ?','แม่ค้ารับสินค้ามาจากที่ไหนบ้างคะ?'),'curious'),
+  {who:'merchant',emotion:'point',text:'บางอย่างก็มาจากสวนและไร่นาของชาวบ้าน บางอย่างก็มาจากชุมชนอื่น ๆ พ่อค้ากับแม่ค้าจึงนำสินค้ามาขายให้ผู้คนในตลาด'},
+  student(()=>genderWord('แล้วคนสมัยอยุธยานิยมเดินทางมาซื้อขายกันทางเรือด้วยใช่ไหมครับ?','แล้วคนสมัยอยุธยานิยมเดินทางมาซื้อขายกันทางเรือด้วยใช่ไหมคะ?'),'curious'),
+  {who:'merchant',emotion:'explain',text:'ถูกแล้วจ้ะ แม่น้ำเป็นเส้นทางสำคัญ ผู้คนพายเรือบรรทุกสินค้ามาซื้อขายกัน ทำให้ตลาดริมน้ำแห่งนี้คึกคักอยู่เสมอ'},
+  student(()=>genderWord('เข้าใจแล้วครับ ตลาดจึงเป็นสถานที่ที่ผู้คนมาพบปะและแลกเปลี่ยนสินค้ากันด้วย','เข้าใจแล้วค่ะ ตลาดจึงเป็นสถานที่ที่ผู้คนมาพบปะและแลกเปลี่ยนสินค้ากันด้วย'),'normal'),
+  {who:'merchant',emotion:'smile',text:'ใช่แล้วจ้ะ ลองเดินชมตลาดดูเถิด ยังมีเรื่องราวน่าสนใจอีกมากมายให้เจ้าได้เรียนรู้'}
+ ];
+}
+
 // ===== แบบทดสอบด่านที่ ๒: การเดินทางทางเรือ =====
 const boatQuiz=[
  {q:'เพราะเหตุใดผู้คนในสมัยอยุธยาจึงนิยมเดินทางทางเรือ?',options:['เพราะมีแม่น้ำและคลองหลายสาย','เพราะไม่มีพาหนะชนิดอื่น','เพราะทุกคนต้องเดินทางทางเรือเท่านั้น'],answer:0,explain:'อยุธยามีแม่น้ำและคลองหลายสาย ผู้คนจึงใช้เรือเดินทางได้สะดวก'},
@@ -318,7 +337,7 @@ quizNextBtn.addEventListener('click',()=>{
  if(isBoatQuiz){
   if(quizShowingResult){
    quizPanel.classList.add('hidden');quizActive=false;
-   objective.textContent='ด่านที่ ๒ สำเร็จแล้ว เดินทางต่อหรือย้อนกลับไปสำรวจได้';
+   goToScene(5,'forward');
    return;
   }
   if(quizIndex<boatQuiz.length-1){quizIndex++;renderBoatQuizQuestion();}
@@ -346,6 +365,10 @@ function interact(){
  if(s==='boat'){
   // เปิดบทสนทนาฉบับเต็มซ้ำได้ทุกครั้งที่กลับมาสำรวจ แต่ไม่เปิดแบบทดสอบซ้ำเมื่อผ่านแล้ว
   openDialogue(boatJourneyLines());
+  return;
+ }
+ if(s==='market'&&Math.abs(player.x-merchant.x)<270){
+  openDialogue(merchantLines());
   return;
  }
  if(s==='coin'&&Math.abs(player.x-770)<140){
@@ -394,7 +417,8 @@ function update(dt){
  // เดินข้ามขอบฉากได้ทั้งสองทิศทาง เพื่อกลับไปสำรวจพื้นที่เดิม
  if(player.x>worldWidth-145&&(
   (sceneIndex<3&&(id==='school'||id==='road'||(id==='coin'&&coinFound)))||
-  (id==='farm'&&stage1Passed)
+  (id==='farm'&&stage1Passed)||
+  (id==='boat'&&stage2Passed)
  )){
   goToScene(sceneIndex+1,'forward');return;
  }
@@ -405,6 +429,7 @@ function update(dt){
  if(id==='coin'&&Math.abs(player.x-770)<140)message=coinFound?'กด E เพื่ออ่านเรื่องเงินพดด้วงอีกครั้ง':'กด E เพื่อตรวจดูเงินพดด้วง';
  if(id==='farm'&&Math.abs(player.x-farmer.x)<260)message=stage1Passed?'กด E เพื่อสนทนาและทบทวนกับชาวนา':'กด E เพื่อคุยกับชาวนา';
  if(id==='boat')message='กด E เพื่อฟังเรื่องราวระหว่างเดินทางอีกครั้ง';
+ if(id==='market'&&Math.abs(player.x-merchant.x)<270)message='กด E เพื่อพูดคุยกับแม่ค้า';
  prompt.textContent=message;prompt.classList.toggle('hidden',!message);
 }
 function drawBackground(){
@@ -453,6 +478,15 @@ function draw(){
    ctx.font='bold 21px system-ui';
    ctx.fillStyle='#fff6db';ctx.textAlign='center';
    ctx.fillText('ชาวนา',farmer.x,ground-farmer.h-9);
+  }
+ }
+ if(id==='market'){
+  const merchantImg=image('merchant-idle.png');
+  if(merchantImg.complete&&merchantImg.naturalWidth){
+   const w=merchant.w,h=merchant.h;
+   ctx.save();ctx.translate(Math.round(merchant.x),0);ctx.scale(-1,1);
+   ctx.drawImage(merchantImg,-w/2,Math.round(ground-h),w,h);ctx.restore();
+   if(Math.abs(player.x-merchant.x)<220){ctx.font='bold 21px system-ui';ctx.fillStyle='#fff6db';ctx.textAlign='center';ctx.fillText('แม่ค้า',merchant.x,ground-h-9);}
   }
  }
  const img=image('student-'+(selectedGender||'boy')+'-walk.png');
