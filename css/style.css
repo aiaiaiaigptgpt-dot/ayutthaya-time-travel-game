@@ -26,12 +26,15 @@ button:disabled{opacity:.55;cursor:not-allowed}
 /* ตัวละครที่พูดอยู่ซ้าย ส่วนนักเรียนอยู่ขวาและหันเข้าหาข้อความ */
 .dialogue-box.farmer-speaking{flex-direction:row-reverse}
 .dialogue-box.boatman-speaking{flex-direction:row}
+.dialogue-box.merchant-speaking{flex-direction:row}
 .dialogue-box.student-speaking.student-left{flex-direction:row}
 .dialogue-box.student-speaking.student-right{flex-direction:row-reverse}
 .dialogue-box.student-speaking.student-left .dialogue-content{padding:12px 18px 8px 4px}
 .dialogue-box.student-speaking.student-right .dialogue-content{padding:12px 4px 8px 18px}
 .dialogue-box.farmer-speaking .dialogue-content{padding:12px 4px 8px 18px}
 .dialogue-box.boatman-speaking .dialogue-content{padding:12px 18px 8px 4px}
+.dialogue-box.merchant-speaking .dialogue-content{padding:12px 18px 8px 4px}
+.dialogue-box.merchant-speaking .dialogue-portrait{transform:none}
 .dialogue-box.student-speaking.student-left .dialogue-portrait{transform:none}
 .dialogue-box.student-speaking.student-right .dialogue-portrait{transform:scaleX(-1)}
 .dialogue-box.farmer-speaking .dialogue-portrait,.dialogue-box.boatman-speaking .dialogue-portrait{transform:none}
