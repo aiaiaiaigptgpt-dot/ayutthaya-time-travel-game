@@ -19,6 +19,16 @@ const images={};
 function image(path){if(!images[path]){const img=new Image();img.decoding='async';img.loading='eager';img.src=path;images[path]=img;}return images[path];}
 // เตรียมภาพฉากถัดไปล่วงหน้า เพื่อลดเวลารอเมื่อผู้เล่นเดินทางเปลี่ยนด่าน
 function preloadScene(index){const scene=scenes[index];if(scene&&scene.bg)image(scene.bg);}
+// โหลดภาพใบหน้าตัวละครทุกอารมณ์ไว้ก่อนเริ่มบทสนทนา ลดอาการสะดุดตอนกด “ถัดไป”
+function preloadDialoguePortraits(){
+ const emotions=['normal','curious','surprised','worried','explain','smile','point'];
+ const files=[];
+ for(const gender of ['boy','girl'])for(const emotion of emotions)files.push(`student-${gender}-${emotion}.png`);
+ for(const emotion of ['normal','explain','smile','point'])files.push(`farmer-${emotion}.png`);
+ for(const emotion of ['normal','explain','point','greeting'])files.push(`boatman-${emotion}.png`);
+ for(const emotion of ['smile','explain','point'])files.push(`merchant-${emotion}.png`);
+ files.forEach(path=>{const img=image(path);if(typeof img.decode==='function')img.decode().catch(()=>{});});
+}
 // ภาพตัวละครและฉากอื่น ๆ จะถูกโหลดเมื่อจำเป็น
 const scenes=[
  {id:'school',bg:'intro-school.png',objective:'เดินไปทางขวาเพื่อกลับบ้าน'},
@@ -73,10 +83,13 @@ function showDialogueLine(){
  speaker.textContent=d.who==='farmer'?'ชาวนา':d.who==='boatman'?'คนพายเรือ':d.who==='merchant'?'แม่ค้า':playerName;
  dialogueText.textContent=typeof d.text==='function'?d.text():d.text;
  portrait.classList.remove('hidden');
- if(d.who==='farmer')portrait.src='farmer-'+d.emotion+'.png';
- else if(d.who==='boatman')portrait.src='boatman-'+(d.emotion==='smile'?'greeting':d.emotion)+'.png';
- else if(d.who==='merchant')portrait.src='merchant-'+d.emotion+'.png';
- else portrait.src='student-'+selectedGender+'-'+d.emotion+'.png';
+ let portraitPath;
+ if(d.who==='farmer')portraitPath='farmer-'+d.emotion+'.png';
+ else if(d.who==='boatman')portraitPath='boatman-'+(d.emotion==='smile'?'greeting':d.emotion)+'.png';
+ else if(d.who==='merchant')portraitPath='merchant-'+d.emotion+'.png';
+ else portraitPath='student-'+selectedGender+'-'+d.emotion+'.png';
+ const portraitAsset=image(portraitPath);
+ if(portrait.src!==portraitAsset.src)portrait.src=portraitAsset.src;
  portrait.alt=speaker.textContent;
  previousBtn.disabled=dialogueIndex===0;
  previousBtn.classList.toggle('hidden',dialogueIndex===0);
@@ -105,7 +118,7 @@ nextBtn.addEventListener('click',advanceDialogue);
 function startGame(){
  showScreen('game-screen');sceneIndex=0;coinFound=false;farmerTalked=false;quizActive=false;quizShowingResult=false;quizRetrying=false;stage1Passed=false;stage2Passed=false;stage3Passed=false;farmIntroSeen=false;player.x=150;
  objective.textContent=scenes[0].objective;prompt.classList.add('hidden');
-  preloadScene(0);preloadScene(1);
+  preloadScene(0);preloadScene(1);preloadDialoguePortraits();
  if(!started){started=true;last=performance.now();requestAnimationFrame(frame);}
  openDialogue([
   student(()=>genderWord('วันนี้เลิกเรียนแล้ว รีบกลับบ้านดีกว่า','วันนี้เลิกเรียนแล้ว รีบกลับบ้านดีกว่า'),'normal'),
