@@ -9,8 +9,8 @@ const keys={left:false,right:false};
 let selectedGender=null,playerName='นักเดินทาง',sceneIndex=0,dialogue=null,dialogueIndex=0,dialogueDone=null;
 let started=false,last=0,animationTime=0,coinFound=false,farmerTalked=false;
 const worldWidth=1280;
-const player={x:150,w:132,h:238,speed:320,facing:1,moving:false};
-const farmer={x:895,w:153,h:225};
+const player={x:150,w:150,h:270,speed:320,facing:1,moving:false};
+const farmer={x:895,w:168,h:247};
 const images={};
 function image(path){if(!images[path]){const img=new Image();img.src=path;images[path]=img;}return images[path];}
 ['intro-school.png','intro-road.png','pod-duang.png','stage1-farm.png','farmer-normal.png','farmer-smile.png','farmer-explain.png',
@@ -149,16 +149,43 @@ function drawBackground(){
  ctx.drawImage(img,0,0,img.naturalWidth,img.naturalHeight,0,0,1280,720);
  return 0;
 }
+const walkFrameMetrics=new WeakMap();
+function getWalkFrameBottoms(img){
+ if(walkFrameMetrics.has(img))return walkFrameMetrics.get(img);
+ const count=6,w=img.naturalWidth,h=img.naturalHeight;
+ const scratch=document.createElement('canvas');
+ scratch.width=w;scratch.height=h;
+ const scratchCtx=scratch.getContext('2d',{willReadFrequently:true});
+ scratchCtx.drawImage(img,0,0);
+ const pixels=scratchCtx.getImageData(0,0,w,h).data;
+ const bottoms=[];
+ for(let i=0;i<count;i++){
+  const x0=Math.round(i*w/count),x1=Math.round((i+1)*w/count);
+  let bottom=h;
+  for(let y=h-1;y>=0;y--){
+   let found=false;
+   for(let x=x0;x<x1;x++){
+    if(pixels[(y*w+x)*4+3]>8){bottom=y+1;found=true;break;}
+   }
+   if(found)break;
+  }
+  bottoms.push(bottom);
+ }
+ walkFrameMetrics.set(img,bottoms);
+ return bottoms;
+}
 function drawWalkSprite(img,frameIndex,x,ground,width,height,facing){
  if(!img.complete||!img.naturalWidth)return false;
- // Six equally spaced animation cells in a single transparent PNG.
- const count=6,cell=img.naturalWidth/count;
- const sx=Math.floor(frameIndex*cell),ex=Math.floor((frameIndex+1)*cell);
+ // Crop the six frames evenly, then align the lowest visible foot in every frame to one ground line.
+ const count=6,w=img.naturalWidth,h=img.naturalHeight;
+ const sx=Math.round(frameIndex*w/count),ex=Math.round((frameIndex+1)*w/count);
+ const bottoms=getWalkFrameBottoms(img);
+ const scaleY=height/h;
+ const alignedTop=-bottoms[frameIndex]*scaleY;
  ctx.save();
  ctx.translate(Math.round(x),Math.round(ground));
  if(facing<0)ctx.scale(-1,1);
- // A slightly narrower drawing box retains the original pixel-art proportions.
- ctx.drawImage(img,sx,0,ex-sx,img.naturalHeight,-width/2,-height,width,height);
+ ctx.drawImage(img,sx,0,ex-sx,h,-width/2,alignedTop,width,height);
  ctx.restore();
  return true;
 }
