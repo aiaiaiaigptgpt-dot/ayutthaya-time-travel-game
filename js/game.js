@@ -182,7 +182,7 @@ function interact(){
  }
  if(s==='farm'&&Math.abs(player.x-farmer.x)<260){
   if(stage1Passed){
-   openDialogue([student('ข้าผ่านบททดสอบแล้ว! ได้เรียนรู้เรื่องวิถีชีวิตชาวนาในสมัยอยุธยามากขึ้นเลย','happy'),npc('เก่งมากจ้ะ เจ้าจดจำเรื่องราวที่ข้าเล่าได้แล้ว ขอให้เดินทางต่อโดยปลอดภัยนะ','smile')]);
+   openDialogue([student('ข้าผ่านบททดสอบแล้ว! ได้เรียนรู้เรื่องวิถีชีวิตชาวนาในสมัยอยุธยามากขึ้นเลย','normal'),npc('เก่งมากจ้ะ เจ้าจดจำเรื่องราวที่ข้าเล่าได้แล้ว ขอให้เดินทางต่อโดยปลอดภัยนะ','smile')]);
    return;
   }
   farmerTalked=true;openDialogue(farmerLines(),openFarmerQuiz);return;
