@@ -16,8 +16,10 @@ const player={x:150,w:150,h:270,speed:320,facing:1,moving:false};
 const farmer={x:1000,w:168,h:247};
 const merchant={x:1040,w:190,h:270};
 const images={};
-function image(path){if(!images[path]){const img=new Image();img.src=path;images[path]=img;}return images[path];}
-// โหลดภาพแบบ Lazy Loading: โหลดเมื่อฉากหรือบทสนทนาต้องใช้จริงเท่านั้น
+function image(path){if(!images[path]){const img=new Image();img.decoding='async';img.loading='eager';img.src=path;images[path]=img;}return images[path];}
+// เตรียมภาพฉากถัดไปล่วงหน้า เพื่อลดเวลารอเมื่อผู้เล่นเดินทางเปลี่ยนด่าน
+function preloadScene(index){const scene=scenes[index];if(scene&&scene.bg)image(scene.bg);}
+// ภาพตัวละครและฉากอื่น ๆ จะถูกโหลดเมื่อจำเป็น
 const scenes=[
  {id:'school',bg:'intro-school.png',objective:'เดินไปทางขวาเพื่อกลับบ้าน'},
  {id:'road',bg:'intro-road.png',objective:'เดินต่อไปตามทางกลับบ้าน'},
@@ -103,6 +105,7 @@ nextBtn.addEventListener('click',advanceDialogue);
 function startGame(){
  showScreen('game-screen');sceneIndex=0;coinFound=false;farmerTalked=false;quizActive=false;quizShowingResult=false;quizRetrying=false;stage1Passed=false;stage2Passed=false;stage3Passed=false;farmIntroSeen=false;player.x=150;
  objective.textContent=scenes[0].objective;prompt.classList.add('hidden');
+  preloadScene(0);preloadScene(1);
  if(!started){started=true;last=performance.now();requestAnimationFrame(frame);}
  openDialogue([
   student(()=>genderWord('วันนี้เลิกเรียนแล้ว รีบกลับบ้านดีกว่า','วันนี้เลิกเรียนแล้ว รีบกลับบ้านดีกว่า'),'normal'),
@@ -114,6 +117,7 @@ function goToScene(n,direction='forward'){
  player.x=direction==='backward'?worldWidth-145:130;
  player.moving=false;
  if(n===4)scenes[n].bg=selectedGender==='girl'?'boat-ride-girl.png':'boat-ride-boy.png';
+ preloadScene(n);preloadScene(n+1);
  objective.textContent=scenes[n].objective;
  prompt.classList.add('hidden');
  if(n===3&&!farmIntroSeen){
