@@ -67,3 +67,5 @@ button:disabled{opacity:.55;cursor:not-allowed}
 .quiz-feedback{min-height:2.8em;margin:16px 0 8px;color:#fff0c8;font-size:clamp(13px,1.6vw,18px);line-height:1.5}
 .quiz-card #quiz-next-btn{display:block;margin-left:auto}
 @media(max-width:650px){.quiz-card{padding:12px;border-radius:12px}.quiz-card h2{margin:10px 0}.quiz-answers{grid-template-columns:1fr;gap:7px}.quiz-answer{padding:9px 10px}.quiz-feedback{margin:8px 0}}
+
+@media(max-width:650px){.dialogue-box.merchant-speaking .dialogue-content{padding:5px 8px 3px 0}}
