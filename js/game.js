@@ -8,9 +8,9 @@ const speaker=$('speaker'),dialogueText=$('dialogue-text'),nextBtn=$('dialogue-n
 const keys={left:false,right:false};
 let selectedGender=null,playerName='นักเดินทาง',sceneIndex=0,dialogue=null,dialogueIndex=0,dialogueDone=null;
 let started=false,last=0,animationTime=0,coinFound=false,farmerTalked=false;
-const worldWidth=2200;
+const worldWidth=1280;
 const player={x:150,w:90,h:153,speed:320,facing:1,moving:false};
-const farmer={x:1550,w:105,h:165};
+const farmer={x:895,w:105,h:165};
 const images={};
 function image(path){if(!images[path]){const img=new Image();img.src=path;images[path]=img;}return images[path];}
 ['intro-school.png','intro-road.png','pod-duang.png','stage1-farm.png','farmer-normal.png','farmer-smile.png','farmer-explain.png',
@@ -102,7 +102,7 @@ function farmerLines(){
 function interact(){
  if(dialogue){advanceDialogue();return;}
  const s=scenes[sceneIndex].id;
- if(s==='coin'&&!coinFound&&Math.abs(player.x-1330)<170){
+ if(s==='coin'&&!coinFound&&Math.abs(player.x-770)<140){
   coinFound=true;openDialogue(coinLines,()=>{goToScene(3);});return;
  }
  if(s==='farm'&&Math.abs(player.x-farmer.x)<170){
@@ -135,7 +135,7 @@ function update(dt){
  player.moving=dir!==0;
  if(dir){player.facing=dir;player.x=Math.max(45,Math.min(worldWidth-80,player.x+dir*player.speed*dt));}
  const id=scenes[sceneIndex].id;
- if((id==='school'||id==='road')&&player.x>worldWidth-115){goToScene(sceneIndex+1);return;}
+ if((id==='school'||id==='road')&&player.x>worldWidth-145){goToScene(sceneIndex+1);return;}
  let message='';
  if(id==='coin'&&!coinFound&&Math.abs(player.x-1330)<170)message='กด E เพื่อตรวจดูเงินพดด้วง';
  if(id==='farm'&&Math.abs(player.x-farmer.x)<170)message='กด E เพื่อคุยกับชาวนา';
@@ -144,9 +144,9 @@ function update(dt){
 function drawBackground(){
  const path=scenes[sceneIndex].bg,img=image(path);
  if(!img.complete||!img.naturalWidth){ctx.fillStyle='#80b6d8';ctx.fillRect(0,0,1280,720);return;}
- const camera=Math.max(0,Math.min(worldWidth-1280,player.x-520));
- ctx.drawImage(img,0,0,img.naturalWidth,img.naturalHeight,-camera,0,worldWidth,720);
- return camera;
+ // Keep the complete 16:9 artwork visible without artificially stretching its width.
+ ctx.drawImage(img,0,0,img.naturalWidth,img.naturalHeight,0,0,1280,720);
+ return 0;
 }
 function rect(x,y,w,h,c){ctx.fillStyle=c;ctx.fillRect(Math.round(x),Math.round(y),w,h);}
 function drawPixelPerson(x,ground,gender,facing,moving,scale=1,farmerMode=false){
