@@ -1,46 +1,51 @@
 <!doctype html>
 <html lang="th">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Ayutthaya Time Travel Game</title>
-  <link rel="stylesheet" href="css/style.css" />
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ปริศนาเงินพดด้วง: ข้ามกาลสู่อยุธยา</title>
+<link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-  <main class="app">
-    <section id="start-screen" class="panel">
-      <h1>ย้อนเวลาสู่กรุงศรีอยุธยา</h1>
-      <p>เกมผจญภัยสำรวจประวัติศาสตร์</p>
-      <button id="start-btn">เริ่มเรื่อง</button>
-    </section>
-
-    <section id="game-screen" class="hidden">
-      <div class="story-stage">
-        <canvas id="game" width="1280" height="720"></canvas>
-
-        <div id="objective" class="objective">เดินไปทางขวาเพื่อกลับบ้าน</div>
-        <div id="interaction-prompt" class="interaction-prompt hidden">กด E เพื่อโต้ตอบ</div>
-
-        <div id="dialogue-box" class="dialogue-box hidden">
-          <div id="speaker" class="speaker">นักเรียน</div>
-          <div id="dialogue-text" class="dialogue-text"></div>
-          <button id="dialogue-next-btn">ถัดไป ▶</button>
-        </div>
+<main id="app">
+  <section id="cover-screen" class="screen" style="background-image:url('game-cover.png')">
+    <button id="start-btn" class="fantasy-btn cover-start">เริ่มการผจญภัย ▶</button>
+  </section>
+  <section id="select-screen" class="screen hidden" style="background-image:url('character-select.png')">
+    <button id="choose-boy" class="choice choice-boy" aria-label="เลือกนักเรียนชาย"><span>เลือกนักเรียนชาย</span></button>
+    <button id="choose-girl" class="choice choice-girl" aria-label="เลือกนักเรียนหญิง"><span>เลือกนักเรียนหญิง</span></button>
+    <div id="selection-label" class="selection-label">เลือกตัวละครที่ต้องการ</div>
+    <button id="select-next" class="fantasy-btn bottom-btn" disabled>ยืนยันตัวละคร ▶</button>
+  </section>
+  <section id="name-screen" class="screen hidden" style="background-image:url('player-name-screen.png')">
+    <form id="name-form" class="name-form">
+      <label for="player-name" class="sr-only">ชื่อของนักเดินทาง</label>
+      <input id="player-name" type="text" maxlength="18" autocomplete="off" placeholder="พิมพ์ชื่อของคุณ" required>
+      <button class="fantasy-btn" type="submit">เริ่มออกเดินทาง ▶</button>
+    </form>
+  </section>
+  <section id="game-screen" class="screen game-screen hidden">
+    <canvas id="game" width="1280" height="720" aria-label="เกมสำรวจอยุธยา"></canvas>
+    <div id="objective" class="objective">เดินไปทางขวาเพื่อกลับบ้าน</div>
+    <div id="interaction-prompt" class="interaction-prompt hidden">กด E เพื่อโต้ตอบ</div>
+    <div id="dialogue-box" class="dialogue-box hidden">
+      <img id="dialogue-portrait" class="dialogue-portrait" alt="ผู้พูด">
+      <div class="dialogue-content">
+        <div id="speaker" class="speaker"></div>
+        <div id="dialogue-text" class="dialogue-text"></div>
+        <button id="dialogue-next-btn" class="fantasy-btn">ถัดไป ▶</button>
       </div>
-
-      <div class="control-help">
-        <span>เดิน: ← → หรือ A / D</span>
-        <span>โต้ตอบ: E</span>
-      </div>
-
-      <div class="touch-controls">
-        <button id="left-btn" aria-label="เดินซ้าย">◀</button>
-        <button id="interact-btn">คุย / ตรวจดู</button>
-        <button id="right-btn" aria-label="เดินขวา">▶</button>
-      </div>
-    </section>
-  </main>
-
-  <script src="js/game.js"></script>
+    </div>
+  </section>
+  <div id="controls" class="controls hidden">
+    <div class="control-help">เดินด้วย ← → หรือ A / D • กด E เพื่อสำรวจและพูดคุย</div>
+    <div class="touch-controls">
+      <button id="left-btn" aria-label="เดินซ้าย">◀</button>
+      <button id="interact-btn">คุย / สำรวจ (E)</button>
+      <button id="right-btn" aria-label="เดินขวา">▶</button>
+    </div>
+  </div>
+</main>
+<script src="js/game.js"></script>
 </body>
 </html>
