@@ -10,7 +10,7 @@ const quizQuestion=$('quiz-question'),quizAnswers=$('quiz-answers'),quizFeedback
 const quizNextBtn=$('quiz-next-btn');
 const keys={left:false,right:false};
 let selectedGender=null,playerName='นักเดินทาง',sceneIndex=0,dialogue=null,dialogueIndex=0,dialogueDone=null;
-let started=false,last=0,animationTime=0,coinFound=false,farmerTalked=false,quizActive=false,quizIndex=0,quizScore=0,quizShowingResult=false,quizRetrying=false,stage1Passed=false;
+let started=false,last=0,animationTime=0,coinFound=false,farmerTalked=false,quizActive=false,quizIndex=0,quizScore=0,quizShowingResult=false,quizRetrying=false,stage1Passed=false,farmIntroSeen=false;
 const worldWidth=1280;
 const player={x:150,w:150,h:270,speed:320,facing:1,moving:false};
 const farmer={x:1000,w:168,h:247};
@@ -42,7 +42,9 @@ $('name-form').addEventListener('submit',e=>{
 function genderWord(boy,girl){return selectedGender==='girl'?girl:boy;}
 function student(text,emotion='normal'){return{who:'student',emotion,text};}
 function npc(text,emotion='normal'){return{who:'farmer',emotion,text};}
-// เพิ่มปุ่มย้อนกลับ โดยคงปุ่มถัดไปเดิมไว้เพียงสองปุ่ม
+// แถบปุ่มสนทนา: ย้อนกลับชิดซ้าย และถัดไปชิดขวา
+const dialogueNav=document.createElement('div');
+dialogueNav.className='dialogue-nav';
 const previousBtn=document.createElement('button');
 previousBtn.type='button';
 previousBtn.id='dialogue-prev-btn';
@@ -50,7 +52,9 @@ previousBtn.textContent='◀ ย้อนกลับ';
 previousBtn.className=nextBtn.className;
 previousBtn.disabled=true;
 previousBtn.setAttribute('aria-label','ย้อนกลับไปอ่านข้อความก่อนหน้า');
-nextBtn.parentNode.insertBefore(previousBtn,nextBtn);
+const dialogueContent=nextBtn.parentNode;
+dialogueContent.insertBefore(dialogueNav,nextBtn);
+dialogueNav.append(previousBtn,nextBtn);
 
 function showDialogueLine(){
  const d=dialogue[dialogueIndex];
@@ -82,7 +86,7 @@ function advanceDialogue(){
 previousBtn.addEventListener('click',goBackDialogue);
 nextBtn.addEventListener('click',advanceDialogue);
 function startGame(){
- showScreen('game-screen');sceneIndex=0;coinFound=false;farmerTalked=false;quizActive=false;quizShowingResult=false;quizRetrying=false;stage1Passed=false;player.x=150;
+ showScreen('game-screen');sceneIndex=0;coinFound=false;farmerTalked=false;quizActive=false;quizShowingResult=false;quizRetrying=false;stage1Passed=false;farmIntroSeen=false;player.x=150;
  objective.textContent=scenes[0].objective;prompt.classList.add('hidden');
  if(!started){started=true;last=performance.now();requestAnimationFrame(frame);}
  openDialogue([
@@ -90,14 +94,20 @@ function startGame(){
   student('วันนี้มีอะไรน่าสนใจระหว่างทางบ้างนะ?','curious')
  ]);
 }
-function goToScene(n){
- sceneIndex=n;player.x=130;player.moving=false;
- objective.textContent=n===3?'ด่านที่ ๑ : วิถีชีวิตชาวนาในสมัยอยุธยา':scenes[n].objective;prompt.classList.add('hidden');
- if(n===3)openDialogue([
-  student('โอ๊ย... เกิดอะไรขึ้นกับฉันเนี่ย!?','surprised'),
-  student('ที่นี่... ที่ไหนกัน? ทุกอย่างดูเหมือนสมัยก่อนเลย','worried'),
-  student('ตรงนั้นมีชาวนาอยู่ ลองเดินไปถามดีกว่า','curious')
- ]);
+function goToScene(n,direction='forward'){
+ sceneIndex=n;
+ player.x=direction==='backward'?worldWidth-145:130;
+ player.moving=false;
+ objective.textContent=n===3?'ด่านที่ ๑ : วิถีชีวิตชาวนาในสมัยอยุธยา':scenes[n].objective;
+ prompt.classList.add('hidden');
+ if(n===3&&!farmIntroSeen){
+  farmIntroSeen=true;
+  openDialogue([
+   student('โอ๊ย... เกิดอะไรขึ้นกับฉันเนี่ย!?','surprised'),
+   student('ที่นี่... ที่ไหนกัน? ทุกอย่างดูเหมือนสมัยก่อนเลย','worried'),
+   student('ตรงนั้นมีชาวนาอยู่ ลองเดินไปถามดีกว่า','curious')
+  ]);
+ }
 }
 const coinLines=[
  student('เอ๊ะ... นั่นอะไรน่ะ?','curious'),
@@ -185,9 +195,9 @@ function selectQuizAnswer(selected){
   quizFeedback.textContent='ถูกต้อง! '+item.explain;
   quizNextBtn.textContent=quizIndex===farmerQuiz.length-1?'ดูผลการเรียนรู้ ▶':'ข้อต่อไป ▶';
  }else{
-  quizRetrying=true;
-  quizFeedback.textContent='ยังไม่ถูกต้อง ลองนึกถึงสิ่งที่ชาวนาเล่าอีกครั้งนะจ๊ะ คำใบ้: '+item.hint;
-  quizNextBtn.textContent='ลองตอบอีกครั้ง ↻';
+  quizRetrying=false;
+  quizFeedback.textContent='คำตอบยังไม่ถูกต้องนะจ๊ะ คำใบ้: '+item.hint+' สามารถอ่านบทสนทนากับชาวนาอีกครั้งเพื่อทบทวนได้';
+  quizNextBtn.textContent=quizIndex===farmerQuiz.length-1?'ดูผลการเรียนรู้ ▶':'ข้อต่อไป ▶';
  }
  quizNextBtn.classList.remove('hidden');
 }
@@ -197,13 +207,14 @@ function openFarmerQuiz(){
 }
 function finishFarmerQuiz(){
  quizShowingResult=true;
- stage1Passed=quizScore===farmerQuiz.length;
+ // เมื่อทำครบทุกข้อ ถือว่าผ่านด่านและปลดล็อกพื้นที่ถัดไป คะแนนเก็บไว้เพื่อสะท้อนผลการเรียนรู้
+ stage1Passed=true;
  quizHeading.textContent='สรุปผลด่านที่ ๑';
  quizProgress.textContent='คะแนน '+quizScore+' / '+farmerQuiz.length;
- quizQuestion.textContent=stage1Passed?'ยอดเยี่ยม! เจ้าผ่านด่านวิถีชีวิตชาวนาแล้ว':'ยังตอบไม่ครบทุกข้อ';
+ quizQuestion.textContent='ทำแบบทดสอบครบแล้ว! ผ่านด่านวิถีชีวิตชาวนา';
  quizAnswers.replaceChildren();
- quizFeedback.textContent=stage1Passed?'ตอบถูกครบทั้ง ๕ ข้อ ได้รับตราผ่านด่านที่ ๑ และปลดล็อกเงื่อนไขสำหรับด่านถัดไปแล้ว':'ต้องตอบคำถามให้ถูกครบทั้ง ๕ ข้อจึงจะผ่านด่านได้';
- quizNextBtn.textContent='รับตราผ่านด่าน ▶';
+ quizFeedback.textContent='ได้รับตราผ่านด่านที่ ๑ แล้ว สามารถเดินทางต่อหรือย้อนกลับมาทบทวนความรู้ได้ทุกเมื่อ';
+ quizNextBtn.textContent='ไปต่อ ▶';
  quizNextBtn.classList.remove('hidden');
 }
 quizNextBtn.addEventListener('click',()=>{
@@ -218,7 +229,6 @@ quizNextBtn.addEventListener('click',()=>{
   }
   return;
  }
- if(quizRetrying){quizRetrying=false;renderQuizQuestion();return;}
  if(quizIndex<farmerQuiz.length-1){quizIndex++;renderQuizQuestion();}
  else finishFarmerQuiz();
 });
@@ -226,12 +236,21 @@ function interact(){
  if(quizActive)return;
  if(dialogue){advanceDialogue();return;}
  const s=scenes[sceneIndex].id;
- if(s==='coin'&&!coinFound&&Math.abs(player.x-770)<140){
-  coinFound=true;openDialogue(coinLines,()=>{goToScene(3);});return;
+ if(s==='coin'&&Math.abs(player.x-770)<140){
+  const firstDiscovery=!coinFound;
+  coinFound=true;
+  openDialogue(coinLines,()=>{if(firstDiscovery)goToScene(3);});
+  return;
  }
  if(s==='farm'&&Math.abs(player.x-farmer.x)<260){
-  if(stage1Passed)return;
-  farmerTalked=true;openDialogue(farmerLines(),openFarmerQuiz);return;
+  farmerTalked=true;
+  if(stage1Passed){
+   // ผ่านด่านแล้วก็กลับมาคุยเพื่อทบทวนได้ โดยไม่เปิดแบบทดสอบซ้ำ
+   openDialogue(farmerLines().slice(0,-1));
+  }else{
+   openDialogue(farmerLines(),openFarmerQuiz);
+  }
+  return;
  }
 }
 $('interact-btn').addEventListener('click',interact);
@@ -260,10 +279,16 @@ function update(dt){
  player.moving=dir!==0;
  if(dir){player.facing=dir;player.x=Math.max(45,Math.min(worldWidth-80,player.x+dir*player.speed*dt));}
  const id=scenes[sceneIndex].id;
- if((id==='school'||id==='road')&&player.x>worldWidth-145){goToScene(sceneIndex+1);return;}
+ // เดินข้ามขอบฉากได้ทั้งสองทิศทาง เพื่อกลับไปสำรวจพื้นที่เดิม
+ if(player.x>worldWidth-145&&sceneIndex<3&&(id==='school'||id==='road'||(id==='coin'&&coinFound))){
+  goToScene(sceneIndex+1,'forward');return;
+ }
+ if(player.x<75&&sceneIndex>0){
+  goToScene(sceneIndex-1,'backward');return;
+ }
  let message='';
- if(id==='coin'&&!coinFound&&Math.abs(player.x-770)<140)message='กด E เพื่อตรวจดูเงินพดด้วง';
- if(id==='farm'&&Math.abs(player.x-farmer.x)<260)message='กด E เพื่อคุยกับชาวนา';
+ if(id==='coin'&&Math.abs(player.x-770)<140)message=coinFound?'กด E เพื่ออ่านเรื่องเงินพดด้วงอีกครั้ง':'กด E เพื่อตรวจดูเงินพดด้วง';
+ if(id==='farm'&&Math.abs(player.x-farmer.x)<260)message=stage1Passed?'กด E เพื่อสนทนาและทบทวนกับชาวนา':'กด E เพื่อคุยกับชาวนา';
  prompt.textContent=message;prompt.classList.toggle('hidden',!message);
 }
 function drawBackground(){
