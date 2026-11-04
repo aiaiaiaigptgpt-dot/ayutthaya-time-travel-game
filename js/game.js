@@ -21,7 +21,8 @@ const scenes=[
  {id:'school',bg:'intro-school.png',objective:'เดินไปทางขวาเพื่อกลับบ้าน'},
  {id:'road',bg:'intro-road.png',objective:'เดินต่อไปตามทางกลับบ้าน'},
  {id:'coin',bg:'pod-duang.png',objective:'มีบางอย่างแปลก ๆ อยู่บนพื้น ลองเดินไปสำรวจ'},
- {id:'farm',bg:'stage1-farm.png',objective:'นี่คือที่ไหนกันนะ? เดินไปถามชาวนาดูสิ'}
+ {id:'farm',bg:'stage1-farm.png',objective:'นี่คือที่ไหนกันนะ? เดินไปถามชาวนาดูสิ'},
+ {id:'boat',bg:null,objective:'ด่านที่ ๒ : การเดินทางทางเรือเข้าสู่พระนคร'}
 ];
 function showScreen(id){for(const s of screens)$(s).classList.toggle('hidden',s!==id);$('controls').classList.toggle('hidden',id!=='game-screen');}
 $('start-btn').addEventListener('click',()=>showScreen('select-screen'));
@@ -59,10 +60,13 @@ dialogueNav.append(previousBtn,nextBtn);
 function showDialogueLine(){
  const d=dialogue[dialogueIndex];
  dialogueBox.classList.toggle('farmer-speaking',d.who==='farmer');
- speaker.textContent=d.who==='farmer'?'ชาวนา':playerName;
+ speaker.textContent=d.who==='farmer'?'ชาวนา':d.who==='boatman'?'คนพายเรือ':playerName;
  dialogueText.textContent=typeof d.text==='function'?d.text():d.text;
- portrait.src=d.who==='farmer'?'farmer-'+d.emotion+'.png':'student-'+selectedGender+'-'+d.emotion+'.png';
- portrait.alt=speaker.textContent;
+ portrait.classList.toggle('hidden',d.who==='boatman');
+ if(d.who!=='boatman'){
+  portrait.src=d.who==='farmer'?'farmer-'+d.emotion+'.png':'student-'+selectedGender+'-'+d.emotion+'.png';
+  portrait.alt=speaker.textContent;
+ }
  previousBtn.disabled=dialogueIndex===0;
  previousBtn.classList.toggle('hidden',dialogueIndex===0);
  nextBtn.textContent=dialogueIndex===dialogue.length-1?'ปิดบทสนทนา ▶':'ถัดไป ▶';
@@ -98,7 +102,8 @@ function goToScene(n,direction='forward'){
  sceneIndex=n;
  player.x=direction==='backward'?worldWidth-145:130;
  player.moving=false;
- objective.textContent=n===3?'ด่านที่ ๑ : วิถีชีวิตชาวนาในสมัยอยุธยา':scenes[n].objective;
+ if(n===4)scenes[n].bg=selectedGender==='girl'?'boat-ride-girl.png':'boat-ride-boy.png';
+ objective.textContent=scenes[n].objective;
  prompt.classList.add('hidden');
  if(n===3&&!farmIntroSeen){
   farmIntroSeen=true;
@@ -107,6 +112,9 @@ function goToScene(n,direction='forward'){
    student('ที่นี่... ที่ไหนกัน? ทุกอย่างดูเหมือนสมัยก่อนเลย','worried'),
    student('ตรงนั้นมีชาวนาอยู่ ลองเดินไปถามดีกว่า','curious')
   ]);
+ }
+ if(n===4&&direction==='forward'){
+  openDialogue(boatJourneyLines());
  }
 }
 const coinLines=[
@@ -155,6 +163,20 @@ function farmerDepartureLines(){
    'เข้าใจแล้วค่ะ ถ้าอย่างนั้นหนูขอตัวไปที่ท่าน้ำก่อนนะคะ'
   ),'normal'),
   npc(()=>genderWord('เดินทางดี ๆ นะพ่อหนุ่ม ขอให้เจ้าไปถึงเมืองโดยปลอดภัย','เดินทางดี ๆ นะแม่หนู ขอให้เจ้าไปถึงเมืองโดยปลอดภัย'),'smile')
+ ];
+}
+
+// ===== บทสนทนาด่านที่ ๒: การเดินทางทางเรือ =====
+function boatJourneyLines(){
+ return [
+  student(()=>genderWord('ในที่สุดก็ถึงท่าน้ำแล้วครับ!','ในที่สุดก็ถึงท่าน้ำแล้วค่ะ!'),'happy'),
+  student('เรือลำนี้จะพาเราเข้าไปในพระนครใช่ไหม?','curious'),
+  {who:'boatman',emotion:'normal',text:'ใช่แล้วพ่อหนุ่มแม่หนู ขึ้นเรือมาได้เลย ข้าจะพาไปยังท่าน้ำฝั่งพระนคร'},
+  {who:'boatman',emotion:'explain',text:'ในสมัยอยุธยา แม่น้ำและลำคลองเป็นเส้นทางคมนาคมสำคัญ ผู้คนใช้เรือเดินทาง ขนส่งสินค้า และติดต่อค้าขายกัน'},
+  student('ระหว่างทางมีเรือหลายชนิดเลย ทั้งเรือโดยสารและเรือบรรทุกสินค้า','curious'),
+  {who:'boatman',emotion:'explain',text:'ถูกต้อง แม่น้ำเจ้าพระยาและลำน้ำต่าง ๆ ช่วยเชื่อมชุมชน ตลาด และเมืองท่าเข้าด้วยกัน'},
+  student('การเดินทางทางน้ำจึงสำคัญต่อชีวิตและเศรษฐกิจของกรุงศรีอยุธยามากเลย','normal'),
+  {who:'boatman',emotion:'smile',text:'ใช่แล้ว อีกไม่นานเราก็จะถึงท่าน้ำฝั่งพระนคร ลองสังเกตสิ่งต่าง ๆ รอบแม่น้ำให้ดีนะ'}
  ];
 }
 
@@ -236,6 +258,10 @@ function interact(){
  if(quizActive)return;
  if(dialogue){advanceDialogue();return;}
  const s=scenes[sceneIndex].id;
+ if(s==='boat'){
+  openDialogue(boatJourneyLines());
+  return;
+ }
  if(s==='coin'&&Math.abs(player.x-770)<140){
   const firstDiscovery=!coinFound;
   coinFound=true;
@@ -280,7 +306,10 @@ function update(dt){
  if(dir){player.facing=dir;player.x=Math.max(45,Math.min(worldWidth-80,player.x+dir*player.speed*dt));}
  const id=scenes[sceneIndex].id;
  // เดินข้ามขอบฉากได้ทั้งสองทิศทาง เพื่อกลับไปสำรวจพื้นที่เดิม
- if(player.x>worldWidth-145&&sceneIndex<3&&(id==='school'||id==='road'||(id==='coin'&&coinFound))){
+ if(player.x>worldWidth-145&&(
+  (sceneIndex<3&&(id==='school'||id==='road'||(id==='coin'&&coinFound)))||
+  (id==='farm'&&stage1Passed)
+ )){
   goToScene(sceneIndex+1,'forward');return;
  }
  if(player.x<75&&sceneIndex>0){
@@ -289,6 +318,7 @@ function update(dt){
  let message='';
  if(id==='coin'&&Math.abs(player.x-770)<140)message=coinFound?'กด E เพื่ออ่านเรื่องเงินพดด้วงอีกครั้ง':'กด E เพื่อตรวจดูเงินพดด้วง';
  if(id==='farm'&&Math.abs(player.x-farmer.x)<260)message=stage1Passed?'กด E เพื่อสนทนาและทบทวนกับชาวนา':'กด E เพื่อคุยกับชาวนา';
+ if(id==='boat')message='กด E เพื่อฟังเรื่องราวระหว่างเดินทางอีกครั้ง';
  prompt.textContent=message;prompt.classList.toggle('hidden',!message);
 }
 function drawBackground(){
@@ -327,6 +357,8 @@ function draw(){
  ctx.clearRect(0,0,1280,720);
  drawBackground();
  const id=scenes[sceneIndex].id;
+ // ภาพฉากเรือมีนักเรียนและคนพายเรืออยู่ในภาพแล้ว จึงไม่วาดตัวละครซ้ำทับ
+ if(id==='boat')return;
  // Raise both characters only in the farm scene so they stand safely inside the grassy path.
  const ground=id==='farm'?590:632;
  if(id==='farm'){
