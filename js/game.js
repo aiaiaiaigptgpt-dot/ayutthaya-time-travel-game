@@ -250,6 +250,26 @@ function merchantLines(){
  ];
 }
 
+function handleStageQuizAnswer(selected,items,letters,hint){
+ const item=items[quizIndex];
+ const buttons=[...quizAnswers.querySelectorAll('button')];
+ if(selected!==item.answer){
+  buttons[selected].disabled=true;
+  buttons[selected].classList.add('incorrect');
+  quizFeedback.textContent=hint||'ยังไม่ถูกต้อง ลองคิดอีกครั้งนะ อ่านคำถามและทบทวนความรู้ แล้วเลือกคำตอบใหม่ได้เลย';
+  quizNextBtn.classList.add('hidden');
+  return;
+ }
+ buttons.forEach((button,index)=>{
+  button.disabled=true;
+  if(index===selected)button.classList.add('correct');
+ });
+ quizScore++;
+ quizFeedback.textContent='ถูกต้อง! '+item.explain;
+ quizNextBtn.textContent=quizIndex===items.length-1?'ดูผลการเรียนรู้ ▶':'ข้อต่อไป ▶';
+ quizNextBtn.classList.remove('hidden');
+}
+
 // ===== แบบทดสอบด่านที่ ๓: ตลาดในกรุงศรีอยุธยา =====
 const marketQuiz=[
  {q:'ตลาดน้อยเป็นสถานที่สำหรับทำอะไร?',options:['เป็นสถานที่ฝึกทหาร','เป็นสถานที่ซื้อขายและแลกเปลี่ยนสินค้า','เป็นสถานที่ประกอบพิธีกรรม'],answer:1,explain:'ตลาดเป็นแหล่งที่ผู้คนนำสินค้ามาซื้อขายและแลกเปลี่ยนกัน'},
@@ -277,18 +297,9 @@ function renderMarketQuizQuestion(){
  });
 }
 function selectMarketQuizAnswer(selected){
- const item=marketQuiz[quizIndex];
- const buttons=[...quizAnswers.querySelectorAll('button')];
- buttons.forEach((button,index)=>{
-  button.disabled=true;
-  if(index===selected&&selected===item.answer)button.classList.add('correct');
-  if(index===selected&&selected!==item.answer)button.classList.add('incorrect');
- });
- if(selected===item.answer){quizScore++;quizFeedback.textContent='ถูกต้อง! '+item.explain;}
- else quizFeedback.textContent='ยังไม่ถูกต้องนะ ลองทบทวนบทสนทนากับแม่ค้าอีกครั้งได้ คำตอบที่ถูกคือ '+['ก','ข','ค'][item.answer]+'. '+item.options[item.answer]+'. '+item.explain;
- quizNextBtn.textContent=quizIndex===marketQuiz.length-1?'ดูผลการเรียนรู้ ▶':'ข้อต่อไป ▶';
- quizNextBtn.classList.remove('hidden');
+ handleStageQuizAnswer(selected,marketQuiz,['ก','ข','ค'],'ยังไม่ถูกต้องนะ ลองทบทวนบทสนทนากับแม่ค้าอีกครั้ง แล้วเลือกคำตอบใหม่ได้เลย');
 }
+
 function finishMarketQuiz(){
  quizShowingResult=true;stage3Passed=true;
  quizHeading.textContent='สรุปผลด่านที่ ๓';
@@ -326,18 +337,9 @@ function renderBoatQuizQuestion(){
  });
 }
 function selectBoatQuizAnswer(selected){
- const item=boatQuiz[quizIndex];
- const buttons=[...quizAnswers.querySelectorAll('button')];
- buttons.forEach((button,index)=>{
-  button.disabled=true;
-  if(index===selected&&selected===item.answer)button.classList.add('correct');
-  if(index===selected&&selected!==item.answer)button.classList.add('incorrect');
- });
- if(selected===item.answer){quizScore++;quizFeedback.textContent='ถูกต้อง! '+item.explain;}
- else quizFeedback.textContent='ยังไม่ถูกต้องนะ ลองทบทวนบทสนทนาอีกครั้งได้ คำตอบที่ถูกคือ '+['ก','ข','ค'][item.answer]+'. '+item.options[item.answer]+'. '+item.explain;
- quizNextBtn.textContent=quizIndex===boatQuiz.length-1?'ดูผลการเรียนรู้ ▶':'ข้อต่อไป ▶';
- quizNextBtn.classList.remove('hidden');
+ handleStageQuizAnswer(selected,boatQuiz,['ก','ข','ค'],'ยังไม่ถูกต้องนะ ลองทบทวนเรื่องการเดินทางทางเรือ แล้วเลือกคำตอบใหม่ได้เลย');
 }
+
 function finishBoatQuiz(){
  quizShowingResult=true;stage2Passed=true;
  quizHeading.textContent='สรุปผลด่านที่ ๒';
@@ -373,24 +375,9 @@ function renderQuizQuestion(){
 }
 function selectQuizAnswer(selected){
  const item=farmerQuiz[quizIndex];
- const buttons=[...quizAnswers.querySelectorAll('button')];
- buttons.forEach((button,index)=>{
-  button.disabled=true;
-  if(index===selected&&selected===item.answer)button.classList.add('correct');
-  if(index===selected&&selected!==item.answer)button.classList.add('incorrect');
- });
- if(selected===item.answer){
-  quizScore++;
-  quizRetrying=false;
-  quizFeedback.textContent='ถูกต้อง! '+item.explain;
-  quizNextBtn.textContent=quizIndex===farmerQuiz.length-1?'ดูผลการเรียนรู้ ▶':'ข้อต่อไป ▶';
- }else{
-  quizRetrying=false;
-  quizFeedback.textContent='คำตอบยังไม่ถูกต้องนะจ๊ะ คำใบ้: '+item.hint+' สามารถอ่านบทสนทนากับชาวนาอีกครั้งเพื่อทบทวนได้';
-  quizNextBtn.textContent=quizIndex===farmerQuiz.length-1?'ดูผลการเรียนรู้ ▶':'ข้อต่อไป ▶';
- }
- quizNextBtn.classList.remove('hidden');
+ handleStageQuizAnswer(selected,farmerQuiz,['ก','ข','ค','ง'],'คำตอบยังไม่ถูกต้องนะจ๊ะ คำใบ้: '+item.hint+' ลองเลือกคำตอบใหม่อีกครั้ง');
 }
+
 function openFarmerQuiz(){
  quizIndex=0;quizScore=0;quizShowingResult=false;quizRetrying=false;quizActive=true;
  quizPanel.classList.remove('hidden');renderQuizQuestion();
