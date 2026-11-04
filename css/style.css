@@ -9,11 +9,11 @@ button:disabled{opacity:.55;cursor:not-allowed}
 .fantasy-btn{background:linear-gradient(#ffe49a,#df9e31);color:#3b230e;border:3px solid #664219;border-radius:14px;padding:12px 25px;font-size:clamp(14px,1.7vw,22px);font-weight:800;box-shadow:0 5px 0 #58351b;text-shadow:0 1px #ffe9ad}
 .fantasy-btn:hover:not(:disabled){filter:brightness(1.12)}
 .cover-start{position:absolute;bottom:8%;left:50%;transform:translateX(-50%);white-space:nowrap}
-.choice{position:absolute;top:31%;width:21%;height:48%;border:4px solid transparent;border-radius:22px;background:transparent;color:#fff;transition:border-color .15s,background .15s}
+.choice{position:absolute;top:13%;width:28%;height:67%;border:4px solid transparent;border-radius:22px;background:transparent;color:#fff;transition:border-color .15s,background .15s}
 .choice:hover,.choice.selected{border-color:#ffe076;background:#fff3b51e;box-shadow:inset 0 0 25px #ffd86355}
-.choice span{position:absolute;bottom:-3px;left:50%;transform:translateX(-50%);width:max-content;max-width:140%;padding:7px 12px;background:#20132ce0;border:2px solid #f1c368;border-radius:12px;font-size:clamp(11px,1.3vw,17px);font-weight:700}
-.choice-boy{left:21%}.choice-girl{right:21%}
-.selection-label{position:absolute;bottom:19%;left:50%;transform:translateX(-50%);background:#23152ebd;padding:6px 16px;border-radius:14px;font-weight:700}
+.choice span{position:absolute;bottom:3%;left:50%;transform:translateX(-50%);width:max-content;max-width:95%;padding:7px 12px;background:#20132ce0;border:2px solid #f1c368;border-radius:12px;font-size:clamp(11px,1.3vw,17px);font-weight:700;white-space:nowrap}
+.choice-girl{left:5%}.choice-boy{right:5%}
+.selection-label{position:absolute;bottom:18%;left:50%;transform:translateX(-50%);background:#23152ebd;padding:6px 16px;border-radius:14px;font-weight:700}
 .bottom-btn{position:absolute;bottom:6%;left:50%;transform:translateX(-50%)}
 .name-form{position:absolute;top:53%;left:50%;transform:translateX(-50%);width:min(45%,480px);display:flex;align-items:center;flex-direction:column;gap:18px}
 .name-form input{width:100%;min-width:180px;text-align:center;background:#fffdf0;color:#2d1a35;border:3px solid #b77e35;border-radius:13px;padding:14px 12px;font-size:clamp(16px,2vw,24px);font-weight:700}
