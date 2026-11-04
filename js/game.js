@@ -178,7 +178,8 @@ function draw(){
  ctx.clearRect(0,0,1280,720);
  drawBackground();
  const id=scenes[sceneIndex].id;
- const ground=632;
+ // Raise both characters only in the farm scene so they stand safely inside the grassy path.
+ const ground=id==='farm'?590:632;
  if(id==='farm'){
   drawFarmer(farmer.x,ground);
   if(Math.abs(player.x-farmer.x)<175){
