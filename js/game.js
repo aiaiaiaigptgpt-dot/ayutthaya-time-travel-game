@@ -1,215 +1,189 @@
-const startScreen=document.getElementById('start-screen');
-const gameScreen=document.getElementById('game-screen');
-const startBtn=document.getElementById('start-btn');
-const canvas=document.getElementById('game');
-const ctx=canvas.getContext('2d');
-const objective=document.getElementById('objective');
-const interactionPrompt=document.getElementById('interaction-prompt');
-const dialogueBox=document.getElementById('dialogue-box');
-const speakerEl=document.getElementById('speaker');
-const dialogueText=document.getElementById('dialogue-text');
-const dialogueNextBtn=document.getElementById('dialogue-next-btn');
-const leftBtn=document.getElementById('left-btn');
-const rightBtn=document.getElementById('right-btn');
-const interactBtn=document.getElementById('interact-btn');
-
-const backgrounds={
-  school:new Image(),
-  road:new Image(),
-  coin:new Image(),
-  farm:new Image()
-};
-backgrounds.school.src='intro-school.png';
-backgrounds.road.src='intro-road.png';
-backgrounds.coin.src='pod-duang.png';
-backgrounds.farm.src='stage1-farm.png';
-
-const studentSheet=new Image();
-studentSheet.src='Male student .png';
-
-const walkFrames=[
-  {x:500,y:330,w:95,h:120},
-  {x:600,y:330,w:95,h:120},
-  {x:700,y:330,w:95,h:120},
-  {x:800,y:330,w:95,h:120},
-  {x:900,y:330,w:95,h:120},
-  {x:1000,y:330,w:95,h:120}
-];
-const idleFrame={x:330,y:170,w:95,h:120};
-
-const scenes=[
-  {id:'school',bg:backgrounds.school,objective:'เดินไปทางขวาเพื่อกลับบ้าน',groundY:610,exitAt:1120},
-  {id:'road',bg:backgrounds.road,objective:'เดินต่อไปตามทาง',groundY:610,exitAt:1120},
-  {id:'coin',bg:backgrounds.coin,objective:'สำรวจสิ่งผิดปกติบนพื้น',groundY:610,interactionX:760},
-  {id:'farm',bg:backgrounds.farm,objective:'ลองเดินสำรวจพื้นที่รอบ ๆ',groundY:610}
-];
-
-let sceneIndex=0;
-let last=0;
-let animTime=0;
-let dialogueIndex=0;
-let dialogueOpen=false;
-let coinTriggered=false;
+"use strict";
+const $=id=>document.getElementById(id);
+const screens=['cover-screen','select-screen','name-screen','game-screen'];
+const canvas=$('game'),ctx=canvas.getContext('2d');
+const objective=$('objective'),prompt=$('interaction-prompt');
+const dialogueBox=$('dialogue-box'),portrait=$('dialogue-portrait');
+const speaker=$('speaker'),dialogueText=$('dialogue-text'),nextBtn=$('dialogue-next-btn');
 const keys={left:false,right:false};
-const player={x:150,y:0,w:145,h:195,speed:220,facing:1,moving:false};
-
-const coinDialogue=[
-  {speaker:'นักเรียน',text:'เอ๊ะ... นั่นอะไรนะ?'},
-  {speaker:'นักเรียน',text:'เหมือนเงินโบราณเลย... ลองดูใกล้ ๆ ดีกว่า'},
-  {speaker:'นักเรียน',text:'นี่มันเงินพดด้วงหรือเปล่านะ?'},
-  {speaker:'นักเรียน',text:'เดี๋ยวนะ... ทำไมมันมีแสง!?'},
-  {speaker:'นักเรียน',text:'เกิดอะไรขึ้นเนี่ย!?'}
+let selectedGender=null,playerName='นักเดินทาง',sceneIndex=0,dialogue=null,dialogueIndex=0,dialogueDone=null;
+let started=false,last=0,animationTime=0,coinFound=false,farmerTalked=false;
+const worldWidth=2200;
+const player={x:150,w:90,h:153,speed:320,facing:1,moving:false};
+const farmer={x:1550,w:105,h:165};
+const images={};
+function image(path){if(!images[path]){const img=new Image();img.src=path;images[path]=img;}return images[path];}
+['intro-school.png','intro-road.png','pod-duang.png','stage1-farm.png','farmer-normal.png','farmer-smile.png','farmer-explain.png',
+'student-boy-normal.png','student-girl-normal.png'].forEach(image);
+const scenes=[
+ {id:'school',bg:'intro-school.png',objective:'เดินไปทางขวาเพื่อกลับบ้าน'},
+ {id:'road',bg:'intro-road.png',objective:'เดินต่อไปตามทางกลับบ้าน'},
+ {id:'coin',bg:'pod-duang.png',objective:'มีบางอย่างแปลก ๆ อยู่บนพื้น ลองเดินไปสำรวจ'},
+ {id:'farm',bg:'stage1-farm.png',objective:'นี่คือที่ไหนกันนะ? เดินไปถามชาวนาดูสิ'}
 ];
-
-function currentScene(){return scenes[sceneIndex];}
-
-function resetPlayerForScene(){
-  player.x=150;
-  player.y=currentScene().groundY-player.h;
-  interactionPrompt.classList.add('hidden');
-  objective.textContent=currentScene().objective;
+function showScreen(id){for(const s of screens)$(s).classList.toggle('hidden',s!==id);$('controls').classList.toggle('hidden',id!=='game-screen');}
+$('start-btn').addEventListener('click',()=>showScreen('select-screen'));
+function choose(gender){
+ selectedGender=gender;
+ $('choose-boy').classList.toggle('selected',gender==='boy');
+ $('choose-girl').classList.toggle('selected',gender==='girl');
+ $('selection-label').textContent=gender==='boy'?'เลือกนักเรียนชายแล้ว':'เลือกนักเรียนหญิงแล้ว';
+ $('select-next').disabled=false;
 }
-
-function drawCover(img){
-  if(!(img.complete&&img.naturalWidth>0)){
-    ctx.fillStyle='#77bff3';
-    ctx.fillRect(0,0,canvas.width,canvas.height);
-    return;
-  }
-  const scale=Math.max(canvas.width/img.naturalWidth,canvas.height/img.naturalHeight);
-  const sw=canvas.width/scale;
-  const sh=canvas.height/scale;
-  const sx=(img.naturalWidth-sw)/2;
-  const sy=(img.naturalHeight-sh)/2;
-  ctx.drawImage(img,sx,sy,sw,sh,0,0,canvas.width,canvas.height);
+$('choose-boy').addEventListener('click',()=>choose('boy'));
+$('choose-girl').addEventListener('click',()=>choose('girl'));
+$('select-next').addEventListener('click',()=>{if(selectedGender)showScreen('name-screen');});
+$('name-form').addEventListener('submit',e=>{
+ e.preventDefault();const name=$('player-name').value.trim();if(!name){$('player-name').focus();return;}
+ playerName=name;startGame();
+});
+function genderWord(boy,girl){return selectedGender==='girl'?girl:boy;}
+function student(text,emotion='normal'){return{who:'student',emotion,text};}
+function npc(text,emotion='normal'){return{who:'farmer',emotion,text};}
+function showDialogueLine(){
+ const d=dialogue[dialogueIndex];
+ speaker.textContent=d.who==='farmer'?'ชาวนา':playerName;
+ dialogueText.textContent=typeof d.text==='function'?d.text():d.text;
+ portrait.src=d.who==='farmer'?'farmer-'+d.emotion+'.png':'student-'+selectedGender+'-'+d.emotion+'.png';
+ portrait.alt=speaker.textContent;
+ nextBtn.textContent=dialogueIndex===dialogue.length-1?'ปิดบทสนทนา ▶':'ถัดไป ▶';
 }
-
-function drawPlayer(){
-  if(!(studentSheet.complete&&studentSheet.naturalWidth>0)) return;
-  const frame=player.moving?walkFrames[Math.floor(animTime*9)%walkFrames.length]:idleFrame;
-  ctx.save();
-  if(player.facing<0){
-    ctx.translate(player.x+player.w,0);
-    ctx.scale(-1,1);
-    ctx.drawImage(studentSheet,frame.x,frame.y,frame.w,frame.h,0,player.y,player.w,player.h);
-  }else{
-    ctx.drawImage(studentSheet,frame.x,frame.y,frame.w,frame.h,player.x,player.y,player.w,player.h);
-  }
-  ctx.restore();
+function openDialogue(lines,done){
+ keys.left=keys.right=false;player.moving=false;
+ dialogue=lines;dialogueIndex=0;dialogueDone=done||null;showDialogueLine();
+ dialogueBox.classList.remove('hidden');prompt.classList.add('hidden');
 }
-
-function update(dt){
-  animTime+=dt;
-  if(dialogueOpen){player.moving=false;return;}
-
-  let dir=0;
-  if(keys.left) dir-=1;
-  if(keys.right) dir+=1;
-  player.moving=dir!==0;
-
-  if(dir!==0){
-    player.facing=dir;
-    player.x+=dir*player.speed*dt;
-    player.x=Math.max(20,Math.min(canvas.width-player.w-20,player.x));
-  }
-
-  const scene=currentScene();
-
-  if(scene.id==='school'||scene.id==='road'){
-    if(player.x>=scene.exitAt){
-      sceneIndex+=1;
-      resetPlayerForScene();
-    }
-  }
-
-  if(scene.id==='coin'){
-    const nearCoin=Math.abs((player.x+player.w/2)-scene.interactionX)<140;
-    if(nearCoin&&!coinTriggered){
-      interactionPrompt.textContent='กด E หรือ “คุย / ตรวจดู” เพื่อตรวจดู';
-      interactionPrompt.classList.remove('hidden');
-    }else{
-      interactionPrompt.classList.add('hidden');
-    }
-  }
+function advanceDialogue(){
+ if(!dialogue)return;
+ if(dialogueIndex<dialogue.length-1){dialogueIndex++;showDialogueLine();return;}
+ dialogue=null;dialogueBox.classList.add('hidden');
+ const done=dialogueDone;dialogueDone=null;if(done)done();
 }
-
-function draw(){
-  const scene=currentScene();
-  drawCover(scene.bg);
-  drawPlayer();
+nextBtn.addEventListener('click',advanceDialogue);
+function startGame(){
+ showScreen('game-screen');sceneIndex=0;coinFound=false;farmerTalked=false;player.x=150;
+ objective.textContent=scenes[0].objective;prompt.classList.add('hidden');
+ if(!started){started=true;last=performance.now();requestAnimationFrame(frame);}
+ openDialogue([
+  student(()=>genderWord('วันนี้เลิกเรียนแล้ว รีบกลับบ้านดีกว่า','วันนี้เลิกเรียนแล้ว รีบกลับบ้านดีกว่า'),'normal'),
+  student('วันนี้มีอะไรน่าสนใจระหว่างทางบ้างนะ?','curious')
+ ]);
 }
-
-function loop(t){
-  const dt=Math.min((t-last)/1000||0,0.033);
-  last=t;
-  update(dt);
-  draw();
-  requestAnimationFrame(loop);
+function goToScene(n){
+ sceneIndex=n;player.x=130;player.moving=false;
+ objective.textContent=scenes[n].objective;prompt.classList.add('hidden');
+ if(n===3)openDialogue([
+  student('โอ๊ย... เกิดอะไรขึ้นกับฉันเนี่ย!?','surprised'),
+  student('ที่นี่... ที่ไหนกัน? ทุกอย่างดูเหมือนสมัยก่อนเลย','worried'),
+  student('ตรงนั้นมีชาวนาอยู่ ลองเดินไปถามดีกว่า','curious')
+ ]);
 }
-
-function openDialogue(items,index=0){
-  dialogueOpen=true;
-  dialogueIndex=index;
-  const item=items[dialogueIndex];
-  speakerEl.textContent=item.speaker;
-  dialogueText.textContent=item.text;
-  dialogueBox.classList.remove('hidden');
-  dialogueNextBtn.textContent=dialogueIndex===items.length-1?'ไปต่อ ▶':'ถัดไป ▶';
-  dialogueNextBtn.onclick=()=>{
-    if(dialogueIndex<items.length-1){
-      dialogueIndex+=1;
-      const next=items[dialogueIndex];
-      speakerEl.textContent=next.speaker;
-      dialogueText.textContent=next.text;
-      dialogueNextBtn.textContent=dialogueIndex===items.length-1?'ไปต่อ ▶':'ถัดไป ▶';
-    }else{
-      dialogueBox.classList.add('hidden');
-      dialogueOpen=false;
-      if(currentScene().id==='coin'){
-        coinTriggered=true;
-        sceneIndex=3;
-        resetPlayerForScene();
-        objective.textContent='เกิดอะไรขึ้น...? ลองเดินสำรวจดู';
-      }
-    }
-  };
+const coinLines=[
+ student('เอ๊ะ... นั่นอะไรน่ะ?','curious'),
+ student('เหมือนเหรียญ... แต่ทำไมรูปร่างแปลกจัง?','curious'),
+ student('นี่มันเงินพดด้วงหรือเปล่านะ?','normal'),
+ student('เดี๋ยวนะ... ทำไมมันมีแสง!?','surprised'),
+ student('เกิดอะไรขึ้นเนี่ย!?','worried')
+];
+function farmerLines(){
+ return [
+  student(()=>genderWord('ขอโทษนะครับ ที่นี่ที่ไหนเหรอครับ?','ขอโทษนะคะ ที่นี่ที่ไหนเหรอคะ?'),'worried'),
+  npc('เจ้าถามแปลกนัก ที่นี่ก็คือกรุงศรีอยุธยาอย่างไรเล่า','normal'),
+  student('กรุงศรีอยุธยา!? จริงเหรอ!?','surprised'),
+  npc('จริงสิ เจ้ามาจากที่ใด ถึงได้แต่งกายแปลกตาเช่นนี้?','smile'),
+  student(()=>genderWord('ผมชื่อ '+playerName+' ครับ เมื่อครู่ยังเดินกลับบ้านอยู่เลย','หนูชื่อ '+playerName+' ค่ะ เมื่อครู่ยังเดินกลับบ้านอยู่เลย'),'worried'),
+  npc('ยินดีที่ได้รู้จักนะ '+playerName+' ข้ากำลังทำนาอยู่พอดี','smile'),
+  npc('ผู้คนจำนวนมากในกรุงศรีอยุธยาทำนา เพราะพื้นที่ราบลุ่มและแม่น้ำเอื้ออำนวยต่อการเพาะปลูก','explain'),
+  npc('ข้าวเป็นอาหารสำคัญ และแม่น้ำยังช่วยให้ผู้คนเดินทางค้าขายได้ด้วย','explain'),
+  student('เข้าใจแล้ว ขอบคุณที่เล่าให้ฟังนะ!','normal'),
+  npc('หากอยากรู้เรื่องเมืองนี้มากขึ้น เจ้าลองเดินสำรวจต่อไปเถิด','smile')
+ ];
 }
-
 function interact(){
-  if(dialogueOpen){dialogueNextBtn.click();return;}
-  const scene=currentScene();
-  if(scene.id==='coin'&&!coinTriggered){
-    const nearCoin=Math.abs((player.x+player.w/2)-scene.interactionX)<140;
-    if(nearCoin) openDialogue(coinDialogue);
-  }
+ if(dialogue){advanceDialogue();return;}
+ const s=scenes[sceneIndex].id;
+ if(s==='coin'&&!coinFound&&Math.abs(player.x-1330)<170){
+  coinFound=true;openDialogue(coinLines,()=>{goToScene(3);});return;
+ }
+ if(s==='farm'&&Math.abs(player.x-farmer.x)<170){
+  farmerTalked=true;openDialogue(farmerLines(),()=>{objective.textContent='เรียนรู้วิถีชีวิตชาวนาแล้ว! สำรวจฉากต่อได้';});return;
+ }
 }
-
-function setHeld(key,value){keys[key]=value;}
-
+$('interact-btn').addEventListener('click',interact);
 window.addEventListener('keydown',e=>{
-  if(e.code==='ArrowLeft'||e.code==='KeyA'){e.preventDefault();setHeld('left',true);}
-  if(e.code==='ArrowRight'||e.code==='KeyD'){e.preventDefault();setHeld('right',true);}
-  if(e.code==='KeyE'||e.code==='Space'||e.code==='Enter'){e.preventDefault();interact();}
+ if(document.activeElement===$('player-name'))return;
+ if(['ArrowLeft','ArrowRight','Space','Enter','KeyE','KeyA','KeyD'].includes(e.code))e.preventDefault();
+ if(e.code==='ArrowLeft'||e.code==='KeyA')keys.left=true;
+ if(e.code==='ArrowRight'||e.code==='KeyD')keys.right=true;
+ if((e.code==='KeyE'||e.code==='Space'||e.code==='Enter')&&!e.repeat&&!$('game-screen').classList.contains('hidden'))interact();
 });
 window.addEventListener('keyup',e=>{
-  if(e.code==='ArrowLeft'||e.code==='KeyA') setHeld('left',false);
-  if(e.code==='ArrowRight'||e.code==='KeyD') setHeld('right',false);
+ if(e.code==='ArrowLeft'||e.code==='KeyA')keys.left=false;
+ if(e.code==='ArrowRight'||e.code==='KeyD')keys.right=false;
 });
-
-function bindHoldButton(button,key){
-  ['pointerdown','touchstart'].forEach(type=>button.addEventListener(type,e=>{e.preventDefault();setHeld(key,true);}));
-  ['pointerup','pointercancel','pointerleave','touchend'].forEach(type=>button.addEventListener(type,e=>{e.preventDefault();setHeld(key,false);}));
+window.addEventListener('blur',()=>{keys.left=keys.right=false;});
+function hold(id,key){
+ const btn=$(id);
+ btn.addEventListener('pointerdown',e=>{e.preventDefault();keys[key]=true;btn.setPointerCapture(e.pointerId);});
+ for(const event of ['pointerup','pointercancel','lostpointercapture'])btn.addEventListener(event,()=>keys[key]=false);
 }
-bindHoldButton(leftBtn,'left');
-bindHoldButton(rightBtn,'right');
-interactBtn.addEventListener('click',interact);
-
-startBtn.addEventListener('click',()=>{
-  startScreen.classList.add('hidden');
-  gameScreen.classList.remove('hidden');
-  sceneIndex=0;
-  coinTriggered=false;
-  resetPlayerForScene();
-  last=performance.now();
-  requestAnimationFrame(loop);
-});
+hold('left-btn','left');hold('right-btn','right');
+function update(dt){
+ animationTime+=dt;
+ if(dialogue||$('game-screen').classList.contains('hidden')){player.moving=false;return;}
+ const dir=Number(keys.right)-Number(keys.left);
+ player.moving=dir!==0;
+ if(dir){player.facing=dir;player.x=Math.max(45,Math.min(worldWidth-80,player.x+dir*player.speed*dt));}
+ const id=scenes[sceneIndex].id;
+ if((id==='school'||id==='road')&&player.x>worldWidth-115){goToScene(sceneIndex+1);return;}
+ let message='';
+ if(id==='coin'&&!coinFound&&Math.abs(player.x-1330)<170)message='กด E เพื่อตรวจดูเงินพดด้วง';
+ if(id==='farm'&&Math.abs(player.x-farmer.x)<170)message='กด E เพื่อคุยกับชาวนา';
+ prompt.textContent=message;prompt.classList.toggle('hidden',!message);
+}
+function drawBackground(){
+ const path=scenes[sceneIndex].bg,img=image(path);
+ if(!img.complete||!img.naturalWidth){ctx.fillStyle='#80b6d8';ctx.fillRect(0,0,1280,720);return;}
+ const camera=Math.max(0,Math.min(worldWidth-1280,player.x-520));
+ ctx.drawImage(img,0,0,img.naturalWidth,img.naturalHeight,-camera,0,worldWidth,720);
+ return camera;
+}
+function rect(x,y,w,h,c){ctx.fillStyle=c;ctx.fillRect(Math.round(x),Math.round(y),w,h);}
+function drawPixelPerson(x,ground,gender,facing,moving,scale=1,farmerMode=false){
+ const bob=moving?Math.round(Math.sin(animationTime*14)*3):0;
+ const step=moving?Math.round(Math.sin(animationTime*14)*8):0;
+ ctx.save();ctx.translate(Math.round(x),Math.round(ground+bob));ctx.scale(scale*(facing<0?-1:1),scale);
+ const skin=farmerMode?'#bc845a':'#e2a67b';
+ // Boots and stepping legs.
+ rect(-19,-36,14,33+step,farmerMode?'#775b3d':'#253d69');
+ rect(5,-36,14,33-step,farmerMode?'#775b3d':'#253d69');
+ rect(-24,-7+step,20,8,'#38293d');rect(4,-7-step,20,8,'#38293d');
+ rect(-28,-94,56,62,farmerMode?'#9d6d43':'#f7f6e7');
+ rect(-28,-94,56,7,farmerMode?'#a98055':'#32497a');
+ rect(-37,-86,10,47,skin);rect(27,-86,10,47,skin);
+ rect(-24,-153,48,51,skin);
+ rect(-26,-156,53,18,farmerMode?'#d7d2bf':'#563a32');
+ if(farmerMode){rect(-41,-164,82,9,'#b89050');rect(-28,-180,56,17,'#caa96c');rect(-15,-103,30,8,'#d6d3ca');}
+ else {
+  rect(-17,-159,38,12,'#4b302d');
+  if(gender==='girl'){rect(-39,-144,12,46,'#50302b');rect(27,-144,12,46,'#50302b');rect(-41,-137,14,7,'#3b70ab');rect(27,-137,14,7,'#3b70ab');rect(-34,-44,68,14,'#263d66');}
+  else rect(-25,-39,50,8,'#253d69');
+  rect(21,-88,13,40,'#344a6e');
+ }
+ rect(5,-131,6,5,'#302329');rect(-16,-131,6,5,'#302329');
+ ctx.restore();
+}
+function draw(){
+ ctx.clearRect(0,0,1280,720);
+ const camera=drawBackground()||0,id=scenes[sceneIndex].id;
+ const ground=620;
+ if(id==='farm'){
+  const fx=farmer.x-camera;
+  drawPixelPerson(fx,ground,'boy',-1,false,1.12,true);
+  if(Math.abs(player.x-farmer.x)<175){ctx.fillStyle='#fff6d6';ctx.font='bold 21px system-ui';ctx.textAlign='center';ctx.fillText('ชาวนา',fx,ground-203);}
+ }
+ drawPixelPerson(player.x-camera,ground,selectedGender,player.facing,player.moving,1,false);
+ // Interaction coordinates are approximate because the coin already appears in the background image.
+}
+function frame(t){const dt=Math.min((t-last)/1000||0,0.04);last=t;update(dt);draw();requestAnimationFrame(frame);}
+showScreen('cover-screen');
