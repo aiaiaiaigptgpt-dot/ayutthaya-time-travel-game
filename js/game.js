@@ -341,9 +341,8 @@ function interact(){
  if(dialogue){advanceDialogue();return;}
  const s=scenes[sceneIndex].id;
  if(s==='boat'){
-  if(stage2Passed){
-   openDialogue([{who:'boatman',emotion:'normal',text:'เอ็งกลับมาอีกแล้วรึ หากอยากทบทวนเรื่องการเดินทางทางเรือ ข้าก็เล่าให้ฟังได้เสมอ'}]);
-  }else openDialogue(boatJourneyLines());
+  // เปิดบทสนทนาฉบับเต็มซ้ำได้ทุกครั้งที่กลับมาสำรวจ แต่ไม่เปิดแบบทดสอบซ้ำเมื่อผ่านแล้ว
+  openDialogue(boatJourneyLines());
   return;
  }
  if(s==='coin'&&Math.abs(player.x-770)<140){
