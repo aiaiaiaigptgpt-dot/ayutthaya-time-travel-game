@@ -62,6 +62,9 @@ function showDialogueLine(){
  dialogueBox.classList.toggle('farmer-speaking',d.who==='farmer');
  dialogueBox.classList.toggle('boatman-speaking',d.who==='boatman');
  dialogueBox.classList.toggle('student-speaking',d.who==='student');
+ // นักเรียนอยู่ซ้ายในฉากเปิดเกมและด่านชาวนา แต่ย้ายไปขวาเฉพาะด่านเรือ
+ dialogueBox.classList.toggle('student-left',d.who==='student'&&sceneIndex!==4);
+ dialogueBox.classList.toggle('student-right',d.who==='student'&&sceneIndex===4);
  speaker.textContent=d.who==='farmer'?'ชาวนา':d.who==='boatman'?'คนพายเรือ':playerName;
  dialogueText.textContent=typeof d.text==='function'?d.text():d.text;
  portrait.classList.remove('hidden');
