@@ -9,12 +9,12 @@ const keys={left:false,right:false};
 let selectedGender=null,playerName='นักเดินทาง',sceneIndex=0,dialogue=null,dialogueIndex=0,dialogueDone=null;
 let started=false,last=0,animationTime=0,coinFound=false,farmerTalked=false;
 const worldWidth=1280;
-const player={x:150,w:90,h:153,speed:320,facing:1,moving:false};
-const farmer={x:895,w:105,h:165};
+const player={x:150,w:118,h:215,speed:320,facing:1,moving:false};
+const farmer={x:895,w:153,h:225};
 const images={};
 function image(path){if(!images[path]){const img=new Image();img.src=path;images[path]=img;}return images[path];}
 ['intro-school.png','intro-road.png','pod-duang.png','stage1-farm.png','farmer-normal.png','farmer-smile.png','farmer-explain.png',
-'student-boy-normal.png','student-girl-normal.png'].forEach(image);
+'student-boy-normal.png','student-girl-normal.png','student-boy-walk.png','student-girl-walk.png','farmer-idle.png'].forEach(image);
 const scenes=[
  {id:'school',bg:'intro-school.png',objective:'เดินไปทางขวาเพื่อกลับบ้าน'},
  {id:'road',bg:'intro-road.png',objective:'เดินต่อไปตามทางกลับบ้าน'},
@@ -137,7 +137,7 @@ function update(dt){
  const id=scenes[sceneIndex].id;
  if((id==='school'||id==='road')&&player.x>worldWidth-145){goToScene(sceneIndex+1);return;}
  let message='';
- if(id==='coin'&&!coinFound&&Math.abs(player.x-1330)<170)message='กด E เพื่อตรวจดูเงินพดด้วง';
+ if(id==='coin'&&!coinFound&&Math.abs(player.x-770)<140)message='กด E เพื่อตรวจดูเงินพดด้วง';
  if(id==='farm'&&Math.abs(player.x-farmer.x)<170)message='กด E เพื่อคุยกับชาวนา';
  prompt.textContent=message;prompt.classList.toggle('hidden',!message);
 }
@@ -148,42 +148,43 @@ function drawBackground(){
  ctx.drawImage(img,0,0,img.naturalWidth,img.naturalHeight,0,0,1280,720);
  return 0;
 }
-function rect(x,y,w,h,c){ctx.fillStyle=c;ctx.fillRect(Math.round(x),Math.round(y),w,h);}
-function drawPixelPerson(x,ground,gender,facing,moving,scale=1,farmerMode=false){
- const bob=moving?Math.round(Math.sin(animationTime*14)*3):0;
- const step=moving?Math.round(Math.sin(animationTime*14)*8):0;
- ctx.save();ctx.translate(Math.round(x),Math.round(ground+bob));ctx.scale(scale*(facing<0?-1:1),scale);
- const skin=farmerMode?'#bc845a':'#e2a67b';
- // Boots and stepping legs.
- rect(-19,-36,14,33+step,farmerMode?'#775b3d':'#253d69');
- rect(5,-36,14,33-step,farmerMode?'#775b3d':'#253d69');
- rect(-24,-7+step,20,8,'#38293d');rect(4,-7-step,20,8,'#38293d');
- rect(-28,-94,56,62,farmerMode?'#9d6d43':'#f7f6e7');
- rect(-28,-94,56,7,farmerMode?'#a98055':'#32497a');
- rect(-37,-86,10,47,skin);rect(27,-86,10,47,skin);
- rect(-24,-153,48,51,skin);
- rect(-26,-156,53,18,farmerMode?'#d7d2bf':'#563a32');
- if(farmerMode){rect(-41,-164,82,9,'#b89050');rect(-28,-180,56,17,'#caa96c');rect(-15,-103,30,8,'#d6d3ca');}
- else {
-  rect(-17,-159,38,12,'#4b302d');
-  if(gender==='girl'){rect(-39,-144,12,46,'#50302b');rect(27,-144,12,46,'#50302b');rect(-41,-137,14,7,'#3b70ab');rect(27,-137,14,7,'#3b70ab');rect(-34,-44,68,14,'#263d66');}
-  else rect(-25,-39,50,8,'#253d69');
-  rect(21,-88,13,40,'#344a6e');
- }
- rect(5,-131,6,5,'#302329');rect(-16,-131,6,5,'#302329');
+function drawWalkSprite(img,frameIndex,x,ground,width,height,facing){
+ if(!img.complete||!img.naturalWidth)return false;
+ // Six equally spaced animation cells in a single transparent PNG.
+ const count=6,cell=img.naturalWidth/count;
+ const sx=Math.floor(frameIndex*cell),ex=Math.floor((frameIndex+1)*cell);
+ ctx.save();
+ ctx.translate(Math.round(x),Math.round(ground));
+ if(facing<0)ctx.scale(-1,1);
+ // A slightly narrower drawing box retains the original pixel-art proportions.
+ ctx.drawImage(img,sx,0,ex-sx,img.naturalHeight,-width/2,-height,width,height);
  ctx.restore();
+ return true;
+}
+function drawFarmer(x,ground){
+ const img=image('farmer-idle.png');
+ if(!img.complete||!img.naturalWidth)return;
+ const w=farmer.w,h=farmer.h;
+ // Preserve source aspect ratio: the farmer image is naturally portrait-oriented.
+ ctx.drawImage(img,Math.round(x-w/2),Math.round(ground-h),w,h);
 }
 function draw(){
  ctx.clearRect(0,0,1280,720);
- const camera=drawBackground()||0,id=scenes[sceneIndex].id;
+ drawBackground();
+ const id=scenes[sceneIndex].id;
  const ground=620;
  if(id==='farm'){
-  const fx=farmer.x-camera;
-  drawPixelPerson(fx,ground,'boy',-1,false,1.12,true);
-  if(Math.abs(player.x-farmer.x)<175){ctx.fillStyle='#fff6d6';ctx.font='bold 21px system-ui';ctx.textAlign='center';ctx.fillText('ชาวนา',fx,ground-203);}
+  drawFarmer(farmer.x,ground);
+  if(Math.abs(player.x-farmer.x)<175){
+   ctx.font='bold 21px system-ui';
+   ctx.fillStyle='#fff6db';ctx.textAlign='center';
+   ctx.fillText('ชาวนา',farmer.x,ground-farmer.h-9);
+  }
  }
- drawPixelPerson(player.x-camera,ground,selectedGender,player.facing,player.moving,1,false);
- // Interaction coordinates are approximate because the coin already appears in the background image.
+ const img=image('student-'+(selectedGender||'boy')+'-walk.png');
+ // Standing uses a near-neutral passing pose; moving cycles through all six frames.
+ const index=player.moving?Math.floor(animationTime*8)%6:2;
+ drawWalkSprite(img,index,player.x,ground,player.w,player.h,player.facing);
 }
 function frame(t){const dt=Math.min((t-last)/1000||0,0.04);last=t;update(dt);draw();requestAnimationFrame(frame);}
 showScreen('cover-screen');
