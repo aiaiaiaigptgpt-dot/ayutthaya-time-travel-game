@@ -9,7 +9,7 @@ const keys={left:false,right:false};
 let selectedGender=null,playerName='นักเดินทาง',sceneIndex=0,dialogue=null,dialogueIndex=0,dialogueDone=null;
 let started=false,last=0,animationTime=0,coinFound=false,farmerTalked=false;
 const worldWidth=1280;
-const player={x:150,w:118,h:215,speed:320,facing:1,moving:false};
+const player={x:150,w:132,h:238,speed:320,facing:1,moving:false};
 const farmer={x:895,w:153,h:225};
 const images={};
 function image(path){if(!images[path]){const img=new Image();img.src=path;images[path]=img;}return images[path];}
@@ -172,7 +172,7 @@ function draw(){
  ctx.clearRect(0,0,1280,720);
  drawBackground();
  const id=scenes[sceneIndex].id;
- const ground=620;
+ const ground=632;
  if(id==='farm'){
   drawFarmer(farmer.x,ground);
   if(Math.abs(player.x-farmer.x)<175){
