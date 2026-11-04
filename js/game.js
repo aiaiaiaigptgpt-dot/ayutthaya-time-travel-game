@@ -42,6 +42,7 @@ function student(text,emotion='normal'){return{who:'student',emotion,text};}
 function npc(text,emotion='normal'){return{who:'farmer',emotion,text};}
 function showDialogueLine(){
  const d=dialogue[dialogueIndex];
+ dialogueBox.classList.toggle('farmer-speaking',d.who==='farmer');
  speaker.textContent=d.who==='farmer'?'ชาวนา':playerName;
  dialogueText.textContent=typeof d.text==='function'?d.text():d.text;
  portrait.src=d.who==='farmer'?'farmer-'+d.emotion+'.png':'student-'+selectedGender+'-'+d.emotion+'.png';
