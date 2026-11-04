@@ -60,13 +60,15 @@ dialogueNav.append(previousBtn,nextBtn);
 function showDialogueLine(){
  const d=dialogue[dialogueIndex];
  dialogueBox.classList.toggle('farmer-speaking',d.who==='farmer');
+ dialogueBox.classList.toggle('boatman-speaking',d.who==='boatman');
+ dialogueBox.classList.toggle('student-speaking',d.who==='student');
  speaker.textContent=d.who==='farmer'?'ชาวนา':d.who==='boatman'?'คนพายเรือ':playerName;
  dialogueText.textContent=typeof d.text==='function'?d.text():d.text;
- portrait.classList.toggle('hidden',d.who==='boatman');
- if(d.who!=='boatman'){
-  portrait.src=d.who==='farmer'?'farmer-'+d.emotion+'.png':'student-'+selectedGender+'-'+d.emotion+'.png';
-  portrait.alt=speaker.textContent;
- }
+ portrait.classList.remove('hidden');
+ if(d.who==='farmer')portrait.src='farmer-'+d.emotion+'.png';
+ else if(d.who==='boatman')portrait.src='boatman-'+(d.emotion==='smile'?'greeting':d.emotion)+'.png';
+ else portrait.src='student-'+selectedGender+'-'+d.emotion+'.png';
+ portrait.alt=speaker.textContent;
  previousBtn.disabled=dialogueIndex===0;
  previousBtn.classList.toggle('hidden',dialogueIndex===0);
  nextBtn.textContent=dialogueIndex===dialogue.length-1?'ปิดบทสนทนา ▶':'ถัดไป ▶';
@@ -85,7 +87,9 @@ function advanceDialogue(){
  if(!dialogue)return;
  if(dialogueIndex<dialogue.length-1){dialogueIndex++;showDialogueLine();return;}
  dialogue=null;dialogueBox.classList.add('hidden');
- const done=dialogueDone;dialogueDone=null;if(done)done();
+ const done=dialogueDone;dialogueDone=null;
+ if(done)done();
+ else if(sceneIndex===4&&!stage2Passed)openBoatQuiz();
 }
 previousBtn.addEventListener('click',goBackDialogue);
 nextBtn.addEventListener('click',advanceDialogue);
@@ -169,15 +173,82 @@ function farmerDepartureLines(){
 // ===== บทสนทนาด่านที่ ๒: การเดินทางทางเรือ =====
 function boatJourneyLines(){
  return [
-  student(()=>genderWord('ในที่สุดก็ถึงท่าน้ำแล้วครับ!','ในที่สุดก็ถึงท่าน้ำแล้วค่ะ!'),'happy'),
-  student('เรือลำนี้จะพาเราเข้าไปในพระนครใช่ไหมครับ?','curious'),
-  {who:'boatman',emotion:'normal',text:'ได้เลยจ้ะ ขึ้นเรือมาได้เลย เดี๋ยวข้าจะพาไปส่งที่ท่าน้ำฝั่งพระนคร'},
-  {who:'boatman',emotion:'explain',text:'สมัยอยุธยา ผู้คนส่วนใหญ่ใช้เรือเดินทาง เพราะมีแม่น้ำและคลองหลายสาย'},
-  student('อ๋อ... คนสมัยก่อนจึงเดินทางทางเรือกันมากใช่ไหมครับ?','curious'),
-  {who:'boatman',emotion:'explain',text:'ใช่แล้วจ้ะ นอกจากใช้เดินทางแล้ว ยังใช้เรือขนข้าว ผลไม้ และสินค้าไปขายที่ตลาดด้วย'},
-  student('แสดงว่าแม่น้ำช่วยให้ผู้คนเดินทางและซื้อขายของกันได้สะดวกเลยนะครับ','normal'),
-  {who:'boatman',emotion:'smile',text:'ถูกต้องจ้ะ ระหว่างทางลองมองดูรอบ ๆ นะ จะเห็นเรือหลายแบบและบ้านเรือนริมแม่น้ำ'}
+  {who:'boatman',emotion:'normal',text:'ดีนะที่เอ็งมาทัน ไม่อย่างนั้นเรือเที่ยวนี้ข้าคงออกไปเสียก่อนแล้ว กว่าจะมีเรือเที่ยวต่อไป เอ็งคงต้องรออีกนานเลยล่ะ ฮ่า ๆ'},
+  student(()=>genderWord('โชคดีจริง ๆ ครับ ถ้ามาช้ากว่านี้คงต้องรอนานแน่ ๆ แล้วเราจะใช้เวลาเดินทางนานไหมครับ?','โชคดีจริง ๆ ค่ะ ถ้ามาช้ากว่านี้คงต้องรอนานแน่ ๆ แล้วเราจะใช้เวลาเดินทางนานไหมคะ?'),'curious'),
+  {who:'boatman',emotion:'explain',text:'ไม่นานดอก เดี๋ยวข้าจะพาเอ็งล่องเรือไปตามแม่น้ำ ประเดี๋ยวก็ถึงพระนครแล้ว'},
+  student(()=>genderWord('ลุงครับ ผมสังเกตว่ามีเรืออยู่เต็มแม่น้ำเลย คนสมัยอยุธยาเดินทางด้วยเรือกันบ่อยหรือครับ?','ลุงคะ หนูสังเกตว่ามีเรืออยู่เต็มแม่น้ำเลย คนสมัยอยุธยาเดินทางด้วยเรือกันบ่อยหรือคะ?'),'curious'),
+  {who:'boatman',emotion:'explain',text:'บ่อยสิเอ็ง! อยุธยามีแม่น้ำและคลองหลายสาย ผู้คนจึงนิยมใช้เรือเดินทางไปยังที่ต่าง ๆ'},
+  student(()=>genderWord('อ๋อ! แบบนี้แม่น้ำก็คงสำคัญกับคนในสมัยอยุธยามากเลยสินะครับ','อ๋อ! แบบนี้แม่น้ำก็คงสำคัญกับคนในสมัยอยุธยามากเลยสินะคะ'),'curious'),
+  {who:'boatman',emotion:'normal',text:'ถูกต้องแล้วเอ็ง ไม่ว่าจะไปตลาด ไปเยี่ยมญาติ หรือไปทำธุระ เรือก็เป็นพาหนะสำคัญของผู้คนในสมัยนี้'},
+  student(()=>genderWord('ว้าว! ระหว่างทางมีเรือเต็มไปหมดเลยครับ บางลำก็มีของอยู่ในเรือด้วย','ว้าว! ระหว่างทางมีเรือเต็มไปหมดเลยค่ะ บางลำก็มีของอยู่ในเรือด้วย'),'surprised'),
+  {who:'boatman',emotion:'point',text:'เอ็งลองมองดูสิ เรือแต่ละลำมีหน้าที่ต่างกัน บางลำใช้เดินทาง บางลำใช้ขนสินค้าไปขายตามตลาด'},
+  student(()=>genderWord('แล้วเขาขนอะไรกันไปขายบ้างครับ?','แล้วเขาขนอะไรกันไปขายบ้างคะ?'),'curious'),
+  {who:'boatman',emotion:'explain',text:'ก็มีข้าว ผลไม้ ปลา และสินค้าต่าง ๆ ที่ผู้คนนำมาซื้อขายกันจ้ะ'},
+  student(()=>genderWord('แสดงว่าแม่น้ำไม่ได้มีไว้แค่เดินทาง แต่ยังช่วยให้ผู้คนค้าขายกันได้ด้วยสินะครับ','แสดงว่าแม่น้ำไม่ได้มีไว้แค่เดินทาง แต่ยังช่วยให้ผู้คนค้าขายกันได้ด้วยสินะคะ'),'normal'),
+  {who:'boatman',emotion:'explain',text:'ใช่แล้วเอ็ง แม่น้ำช่วยให้ผู้คนขนสินค้าไปขายตามตลาด และติดต่อกับชุมชนอื่น ๆ ได้สะดวกขึ้น'},
+  student(()=>genderWord('เข้าใจแล้วครับ ถ้าไม่มีแม่น้ำ การขนส่งสินค้าก็คงลำบากมากเลยนะครับ','เข้าใจแล้วค่ะ ถ้าไม่มีแม่น้ำ การขนส่งสินค้าก็คงลำบากมากเลยนะคะ'),'curious'),
+  {who:'boatman',emotion:'normal',text:'นั่นสิเอ็ง แม่น้ำจึงมีความสำคัญต่อการค้าขายของกรุงศรีอยุธยามากทีเดียว'},
+  student(()=>genderWord('ลุงครับ ทำไมบ้านหลายหลังถึงอยู่ใกล้แม่น้ำกันครับ?','ลุงคะ ทำไมบ้านหลายหลังถึงอยู่ใกล้แม่น้ำกันคะ?'),'curious'),
+  {who:'boatman',emotion:'explain',text:'ก็เพราะแม่น้ำมีประโยชน์น่ะสิเอ็ง ผู้คนใช้น้ำในชีวิตประจำวัน ใช้เดินทาง และทำมาหากิน'},
+  student(()=>genderWord('อ๋อ! ถ้าอยู่ใกล้แม่น้ำก็เดินทางและค้าขายได้สะดวกด้วยใช่ไหมครับ?','อ๋อ! ถ้าอยู่ใกล้แม่น้ำก็เดินทางและค้าขายได้สะดวกด้วยใช่ไหมคะ?'),'curious'),
+  {who:'boatman',emotion:'explain',text:'ใช่แล้วเอ็ง ผู้คนบางส่วนยังประกอบอาชีพประมง จับปลาไปขายหรือทำอาหารอีกด้วย'},
+  student(()=>genderWord('ฟังดูแล้วแม่น้ำมีประโยชน์กับผู้คนหลายอย่างเลยนะครับ','ฟังดูแล้วแม่น้ำมีประโยชน์กับผู้คนหลายอย่างเลยนะคะ'),'normal'),
+  {who:'boatman',emotion:'normal',text:'แน่นอนสิเอ็ง แม่น้ำเป็นส่วนสำคัญของชีวิตผู้คนในสมัยอยุธยาเลยล่ะ'},
+  student(()=>genderWord('ว้าว! นั่นใช่พระนครที่เรากำลังจะไปหรือเปล่าครับ?','ว้าว! นั่นใช่พระนครที่เรากำลังจะไปหรือเปล่าคะ?'),'surprised'),
+  {who:'boatman',emotion:'point',text:'ใช่แล้วเอ็ง เรามาถึงท่าน้ำฝั่งพระนครแล้วล่ะ'},
+  student(()=>genderWord('ขอบคุณลุงมากนะครับ วันนี้ผมได้เรียนรู้เรื่องการเดินทางและชีวิตของผู้คนในสมัยอยุธยาเยอะเลยครับ','ขอบคุณลุงมากนะคะ วันนี้หนูได้เรียนรู้เรื่องการเดินทางและชีวิตของผู้คนในสมัยอยุธยาเยอะเลยค่ะ'),'normal'),
+  {who:'boatman',emotion:'greeting',text:'ฮ่า ๆ ไม่เป็นไรดอกเอ็ง เดินทางต่อไปก็ระวังตัวด้วยนะ ในพระนครยังมีเรื่องราวอีกมากมายรอให้เอ็งไปค้นหา'},
+  student(()=>genderWord('ครับ! ผมจะลองเข้าไปสำรวจพระนครต่อไปครับ','ค่ะ! หนูจะลองเข้าไปสำรวจพระนครต่อไปค่ะ'),'normal')
  ];
+}
+
+// ===== แบบทดสอบด่านที่ ๒: การเดินทางทางเรือ =====
+const boatQuiz=[
+ {q:'เพราะเหตุใดผู้คนในสมัยอยุธยาจึงนิยมเดินทางทางเรือ?',options:['เพราะมีแม่น้ำและคลองหลายสาย','เพราะไม่มีพาหนะชนิดอื่น','เพราะทุกคนต้องเดินทางทางเรือเท่านั้น'],answer:0,explain:'อยุธยามีแม่น้ำและคลองหลายสาย ผู้คนจึงใช้เรือเดินทางได้สะดวก'},
+ {q:'เรือในสมัยอยุธยามีประโยชน์อย่างไร?',options:['ใช้สำหรับตกแต่งบ้าน','ใช้เดินทางและขนส่งสินค้า','ใช้สำหรับจับสัตว์ป่าเท่านั้น'],answer:1,explain:'เรือใช้ทั้งเดินทางและขนส่งสินค้าไปยังตลาดและชุมชนต่าง ๆ'},
+ {q:'ข้อใดเป็นสินค้าที่ผู้คนสามารถขนส่งทางเรือไปขายได้?',options:['โทรศัพท์และคอมพิวเตอร์','รถยนต์และจักรยาน','ข้าว ผลไม้ และปลา'],answer:2,explain:'ข้าว ผลไม้ และปลา เป็นตัวอย่างสินค้าที่ผู้คนขนส่งและนำไปซื้อขายกัน'},
+ {q:'เพราะเหตุใดผู้คนจึงนิยมตั้งบ้านเรือนอยู่ใกล้แม่น้ำ?',options:['เพราะแม่น้ำมีประโยชน์ต่อการดำรงชีวิตและการเดินทาง','เพราะไม่ต้องประกอบอาชีพ','เพราะไม่มีพื้นที่อื่นให้อยู่อาศัย'],answer:0,explain:'ผู้คนใช้น้ำในชีวิตประจำวัน เดินทาง ทำมาหากิน และค้าขายได้สะดวก'},
+ {q:'แม่น้ำและคลองมีส่วนช่วยให้กรุงศรีอยุธยาเจริญรุ่งเรืองอย่างไร?',options:['ทำให้ผู้คนไม่ต้องเดินทาง','ช่วยให้เดินทาง ขนส่งสินค้า และค้าขายได้สะดวก','ทำให้ผู้คนเลิกประกอบอาชีพค้าขาย'],answer:1,explain:'แม่น้ำและคลองเป็นเส้นทางสำคัญที่ช่วยเชื่อมผู้คน ชุมชน และตลาดเข้าด้วยกัน'}
+];
+let stage2Passed=false;
+function openBoatQuiz(){
+ quizIndex=0;quizScore=0;quizShowingResult=false;quizRetrying=false;quizActive=true;
+ quizPanel.classList.remove('hidden');renderBoatQuizQuestion();
+}
+function renderBoatQuizQuestion(){
+ const item=boatQuiz[quizIndex];
+ quizHeading.textContent='ด่านที่ ๒ : การเดินทางทางเรือ';
+ quizProgress.textContent='ข้อ '+(quizIndex+1)+' / '+boatQuiz.length;
+ quizQuestion.textContent=item.q;quizAnswers.replaceChildren();quizFeedback.textContent='';
+ quizNextBtn.classList.add('hidden');
+ item.options.forEach((option,index)=>{
+  const button=document.createElement('button');
+  button.type='button';button.className='quiz-answer';button.textContent=['ก','ข','ค'][index]+'. '+option;
+  button.addEventListener('click',()=>selectBoatQuizAnswer(index));
+  quizAnswers.append(button);
+ });
+}
+function selectBoatQuizAnswer(selected){
+ const item=boatQuiz[quizIndex];
+ const buttons=[...quizAnswers.querySelectorAll('button')];
+ buttons.forEach((button,index)=>{
+  button.disabled=true;
+  if(index===selected&&selected===item.answer)button.classList.add('correct');
+  if(index===selected&&selected!==item.answer)button.classList.add('incorrect');
+ });
+ if(selected===item.answer){quizScore++;quizFeedback.textContent='ถูกต้อง! '+item.explain;}
+ else quizFeedback.textContent='ยังไม่ถูกต้องนะ ลองทบทวนบทสนทนาอีกครั้งได้ คำตอบที่ถูกคือ '+['ก','ข','ค'][item.answer]+'. '+item.options[item.answer]+'. '+item.explain;
+ quizNextBtn.textContent=quizIndex===boatQuiz.length-1?'ดูผลการเรียนรู้ ▶':'ข้อต่อไป ▶';
+ quizNextBtn.classList.remove('hidden');
+}
+function finishBoatQuiz(){
+ quizShowingResult=true;stage2Passed=true;
+ quizHeading.textContent='สรุปผลด่านที่ ๒';
+ quizProgress.textContent='คะแนน '+quizScore+' / '+boatQuiz.length;
+ quizQuestion.textContent='ทำแบบทดสอบครบแล้ว! ผ่านด่านการเดินทางทางเรือ';
+ quizAnswers.replaceChildren();
+ quizFeedback.textContent='เจ้าได้เรียนรู้เรื่องการเดินทางทางน้ำ การขนส่งสินค้า และวิถีชีวิตริมแม่น้ำแล้ว';
+ quizNextBtn.textContent='จบด่านที่ ๒ ✓';quizNextBtn.classList.remove('hidden');
 }
 
 // ===== แบบทดสอบด่านที่ ๑: แก้ไขคำถาม ตัวเลือก และคำอธิบายได้ตรงนี้ =====
@@ -240,6 +311,9 @@ function finishFarmerQuiz(){
  quizNextBtn.classList.remove('hidden');
 }
 quizNextBtn.addEventListener('click',()=>{
+ if(quizShowingResult&&quizHeading.textContent.includes('ด่านที่ ๒')){
+  quizPanel.classList.add('hidden');quizActive=false;return;
+ }
  if(quizShowingResult){
   quizPanel.classList.add('hidden');quizActive=false;
   if(stage1Passed){
@@ -259,7 +333,9 @@ function interact(){
  if(dialogue){advanceDialogue();return;}
  const s=scenes[sceneIndex].id;
  if(s==='boat'){
-  openDialogue(boatJourneyLines());
+  if(stage2Passed){
+   openDialogue([{who:'boatman',emotion:'normal',text:'เอ็งกลับมาอีกแล้วรึ หากอยากทบทวนเรื่องการเดินทางทางเรือ ข้าก็เล่าให้ฟังได้เสมอ'}]);
+  }else openDialogue(boatJourneyLines());
   return;
  }
  if(s==='coin'&&Math.abs(player.x-770)<140){
