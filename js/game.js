@@ -10,7 +10,7 @@ const quizQuestion=$('quiz-question'),quizAnswers=$('quiz-answers'),quizFeedback
 const quizNextBtn=$('quiz-next-btn');
 const keys={left:false,right:false};
 let selectedGender=null,playerName='นักเดินทาง',sceneIndex=0,dialogue=null,dialogueIndex=0,dialogueDone=null;
-let started=false,last=0,animationTime=0,coinFound=false,farmerTalked=false,quizActive=false,quizIndex=0,quizScore=0,quizShowingResult=false;
+let started=false,last=0,animationTime=0,coinFound=false,farmerTalked=false,quizActive=false,quizIndex=0,quizScore=0,quizShowingResult=false,quizRetrying=false,stage1Passed=false;
 const worldWidth=1280;
 const player={x:150,w:150,h:270,speed:320,facing:1,moving:false};
 const farmer={x:1000,w:168,h:247};
@@ -65,7 +65,7 @@ function advanceDialogue(){
 }
 nextBtn.addEventListener('click',advanceDialogue);
 function startGame(){
- showScreen('game-screen');sceneIndex=0;coinFound=false;farmerTalked=false;quizActive=false;quizShowingResult=false;player.x=150;
+ showScreen('game-screen');sceneIndex=0;coinFound=false;farmerTalked=false;quizActive=false;quizShowingResult=false;quizRetrying=false;stage1Passed=false;player.x=150;
  objective.textContent=scenes[0].objective;prompt.classList.add('hidden');
  if(!started){started=true;last=performance.now();requestAnimationFrame(frame);}
  openDialogue([
@@ -92,27 +92,26 @@ const coinLines=[
 // ===== ส่วนแก้ไขบทสนทนาชาวนา: ปรับข้อความใน npc(...) และ student(...) ได้ตรงนี้ =====
 function farmerLines(){
  return [
-  student(()=>genderWord('ขอโทษนะครับ ที่นี่ที่ไหนเหรอครับ?','ขอโทษนะคะ ที่นี่ที่ไหนเหรอคะ?'),'worried'),
-  npc('เจ้ามาถึงกรุงศรีอยุธยาแล้วล่ะ ที่นี่เป็นเมืองใหญ่ที่มีผู้คนอาศัยอยู่มากมาย','normal'),
-  student(()=>genderWord('ทำไมบริเวณนี้จึงมีทุ่งนาเยอะจังครับ?','ทำไมบริเวณนี้จึงมีทุ่งนาเยอะจังคะ?'),'curious'),
-  npc('เพราะกรุงศรีอยุธยาตั้งอยู่ในบริเวณที่ราบลุ่ม มีแม่น้ำหลายสายไหลผ่าน จึงมีน้ำใช้ในการเพาะปลูก และดินก็ค่อนข้างอุดมสมบูรณ์','explain'),
-  npc('ชาวนาอย่างข้าจะเริ่มจากเตรียมดินและไถนาให้พร้อม จากนั้นจึงนำต้นกล้าข้าวมาปลูกในนา','explain'),
-  npc('เมื่อปลูกแล้วก็ต้องคอยดูแลระดับน้ำ กำจัดวัชพืช และเฝ้าดูต้นข้าวให้เติบโตแข็งแรง','explain'),
-  student(()=>genderWord('แล้วข้าวมีความสำคัญกับผู้คนในสมัยอยุธยาอย่างไรครับ?','แล้วข้าวมีความสำคัญกับผู้คนในสมัยอยุธยาอย่างไรคะ?'),'curious'),
-  npc('ข้าวเป็นอาหารหลักของผู้คน ทุกบ้านต้องกินข้าว และข้าวยังเป็นผลผลิตสำคัญที่นำไปแลกเปลี่ยนหรือค้าขายได้ด้วย','explain'),
-  npc('นอกจากนั้น แม่น้ำและคลองยังเป็นเส้นทางสำคัญ ผู้คนใช้เดินทางและขนส่งสินค้าไปยังชุมชนต่าง ๆ','explain'),
-  student(()=>genderWord('เข้าใจแล้วครับ ทั้งดิน น้ำ และแม่น้ำจึงสำคัญต่อการทำนาและชีวิตของผู้คน','เข้าใจแล้วค่ะ ทั้งดิน น้ำ และแม่น้ำจึงสำคัญต่อการทำนาและชีวิตของผู้คน'),'normal'),
-  npc('ถูกต้องแล้วล่ะ หากเจ้าเข้าใจเรื่องที่ข้าเล่าแล้ว ลองตอบคำถามทบทวนความรู้ทั้ง ๕ ข้อดูนะ','smile')
+  student(()=>genderWord('เอ่อ... ขอโทษนะครับ ที่นี่ที่ไหนเหรอครับ?','เอ่อ... ขอโทษนะคะ ที่นี่ที่ไหนเหรอคะ?'),'worried'),
+  npc('อ้าว! พ่อหนุ่มแม่หนู เจ้ามาจากที่ใดกันหรือ? ที่นี่คือกรุงศรีอยุธยา เมืองอันรุ่งเรืองของเรานี่เอง','normal'),
+  student(()=>genderWord('กรุงศรีอยุธยามีทุ่งนากว้างใหญ่แบบนี้ด้วยหรือครับ?','กรุงศรีอยุธยามีทุ่งนากว้างใหญ่แบบนี้ด้วยหรือคะ?'),'curious'),
+  npc('ใช่แล้วล่ะ เมืองของเราตั้งอยู่บริเวณที่ราบลุ่มแม่น้ำเจ้าพระยาตอนล่าง มีแม่น้ำหลายสายไหลผ่าน ทั้งยังมีดินอุดมสมบูรณ์ จึงเหมาะแก่การเพาะปลูกเป็นอย่างยิ่ง','explain'),
+  student(()=>genderWord('แล้วผู้คนที่นี่ปลูกพืชชนิดใดกันบ้างครับ?','แล้วผู้คนที่นี่ปลูกพืชชนิดใดกันบ้างคะ?'),'curious'),
+  npc('พืชสำคัญของเราก็คือข้าวจ้ะ นอกจากนั้นยังมีพริกไทย หมาก อ้อย มะพร้าว และผลไม้อีกหลายชนิด','explain'),
+  student(()=>genderWord('แล้วข้าวมีความสำคัญต่อผู้คนอย่างไรหรือครับ?','แล้วข้าวมีความสำคัญต่อผู้คนอย่างไรหรือคะ?'),'curious'),
+  npc('ข้าวเป็นอาหารหลักของผู้คนในบ้านเมืองเรา นอกจากเก็บไว้กินแล้ว ยังนำผลผลิตไปขายหรือแลกเปลี่ยนเป็นสิ่งของอื่นได้อีกด้วย','explain'),
+  student(()=>genderWord('เข้าใจแล้วครับ ข้าวจึงเป็นสิ่งสำคัญต่อชีวิตของผู้คนในอยุธยาสินะ','เข้าใจแล้วค่ะ ข้าวจึงเป็นสิ่งสำคัญต่อชีวิตของผู้คนในอยุธยาสินะ'),'normal'),
+  npc('ถูกต้องแล้วจ้ะ เอาล่ะ! ไหนลองตอบคำถามจากเรื่องที่ข้าเล่าให้ฟังดูเถิด หากตอบถูกครบทั้ง ๕ ข้อ เจ้าก็จะผ่านด่านนี้ไปได้','smile')
  ];
 }
 
 // ===== แบบทดสอบด่านที่ ๑: แก้ไขคำถาม ตัวเลือก และคำอธิบายได้ตรงนี้ =====
 const farmerQuiz=[
- {q:'เหตุใดบริเวณกรุงศรีอยุธยาจึงเหมาะแก่การทำนา?',options:['เพราะเป็นที่ราบลุ่ม มีแม่น้ำและดินอุดมสมบูรณ์','เพราะมีภูเขาสูงและอากาศหนาว','เพราะเป็นทะเลทราย','เพราะมีหิมะตกตลอดปี'],answer:0,explain:'ที่ราบลุ่ม มีน้ำจากแม่น้ำ และดินอุดมสมบูรณ์ ช่วยให้เพาะปลูกข้าวได้ดี'},
- {q:'ชาวนาเตรียมพื้นที่ก่อนปลูกข้าวอย่างไร?',options:['สร้างบ้านกลางทุ่งนา','เตรียมดินและไถนา','ขุดเหมืองแร่','สร้างกำแพงเมือง'],answer:1,explain:'ชาวนาต้องเตรียมดินและไถนาให้พร้อมก่อนนำต้นกล้าข้าวมาปลูก'},
- {q:'หลังจากปลูกต้นกล้าข้าวแล้ว ชาวนาควรทำสิ่งใด?',options:['ปล่อยทิ้งไว้โดยไม่ดูแล','ตัดต้นข้าวทิ้งทันที','ดูแลน้ำและกำจัดวัชพืช','ย้ายต้นข้าวไปปลูกบนภูเขา'],answer:2,explain:'ต้นข้าวต้องได้รับการดูแล เช่น ดูแลระดับน้ำและกำจัดวัชพืช'},
- {q:'ข้าวมีความสำคัญต่อผู้คนในสมัยอยุธยาอย่างไร?',options:['ใช้ตกแต่งบ้านเท่านั้น','เป็นอาหารหลักของผู้คน','ใช้สร้างเรือ','ใช้ทำเครื่องมือเหล็ก'],answer:1,explain:'ข้าวเป็นอาหารหลักที่ผู้คนกินในชีวิตประจำวัน และยังเป็นผลผลิตที่นำไปแลกเปลี่ยนค้าขายได้'},
- {q:'ผู้คนใช้แม่น้ำและคลองในสมัยอยุธยาเพื่อประโยชน์ใด?',options:['ใช้เดินทางและขนส่งสินค้า','ใช้เป็นถนนสำหรับรถยนต์','ใช้ปลูกป่าบนผิวน้ำ','ใช้กั้นไม่ให้ผู้คนติดต่อกัน'],answer:0,explain:'แม่น้ำและคลองเป็นเส้นทางสำคัญสำหรับเดินทางและขนส่งสินค้า'}
+ {q:'เหตุใดบริเวณกรุงศรีอยุธยาจึงเหมาะแก่การทำนา?',options:['เพราะเป็นที่ราบลุ่ม มีแม่น้ำและดินอุดมสมบูรณ์','เพราะมีภูเขาสูงและอากาศหนาว','เพราะเป็นทะเลทราย','เพราะมีหิมะตกตลอดปี'],answer:0,explain:'ที่ราบลุ่ม มีแม่น้ำ และดินอุดมสมบูรณ์ ทำให้มีสภาพเหมาะแก่การทำนา',hint:'ลองนึกถึงสิ่งที่ชาวนาเล่าเกี่ยวกับลักษณะพื้นที่และแหล่งน้ำ'},
+ {q:'กรุงศรีอยุธยาตั้งอยู่บริเวณใด?',options:['ที่ราบสูงภาคเหนือ','ที่ราบลุ่มแม่น้ำเจ้าพระยาตอนล่าง','บริเวณภูเขาสูง','บริเวณชายฝั่งทะเลอันดามัน'],answer:1,explain:'กรุงศรีอยุธยาตั้งอยู่บริเวณที่ราบลุ่มแม่น้ำเจ้าพระยาตอนล่าง',hint:'ชาวนาบอกชื่อแม่น้ำสายสำคัญและตำแหน่งของพื้นที่ไว้ในบทสนทนา'},
+ {q:'พืชชนิดใดเป็นพืชสำคัญที่ผู้คนในสมัยอยุธยาปลูก?',options:['ข้าว','ยางพารา','กาแฟ','ชา'],answer:0,explain:'ข้าวเป็นพืชสำคัญของอยุธยา และเป็นอาหารหลักของผู้คน',hint:'ชาวนาเน้นย้ำว่าพืชชนิดใดเป็นอาหารหลักของผู้คน'},
+ {q:'ข้อใดเป็นพืชที่ผู้คนในสมัยอยุธยาปลูกนอกเหนือจากข้าว?',options:['พริกไทย','อ้อย','มะพร้าว','ถูกทุกข้อ'],answer:3,explain:'ผู้คนปลูกพืชหลายชนิด เช่น พริกไทย อ้อย มะพร้าว หมาก และผลไม้ต่าง ๆ',hint:'ลองทบทวนรายชื่อพืชที่ชาวนาพูดถึง นอกเหนือจากข้าว'},
+ {q:'ข้าวมีความสำคัญต่อผู้คนในสมัยอยุธยาอย่างไร?',options:['ใช้สำหรับตกแต่งบ้าน','เป็นอาหารหลักของผู้คน และสามารถนำผลผลิตไปขายหรือแลกเปลี่ยนได้','ใช้สำหรับสร้างบ้านเรือน','ใช้สำหรับทำเครื่องมือการเกษตรเท่านั้น'],answer:1,explain:'ข้าวเป็นอาหารหลักของผู้คน และผลผลิตยังนำไปขายหรือแลกเปลี่ยนเป็นสิ่งของอื่นได้',hint:'ชาวนาเล่าว่าข้าวนำไปใช้ประโยชน์ได้ทั้งกิน ขาย และแลกเปลี่ยน'}
 ];
 function renderQuizQuestion(){
  const item=farmerQuiz[quizIndex];
@@ -134,34 +133,43 @@ function selectQuizAnswer(selected){
  const buttons=[...quizAnswers.querySelectorAll('button')];
  buttons.forEach((button,index)=>{
   button.disabled=true;
-  if(index===item.answer)button.classList.add('correct');
+  if(index===selected&&selected===item.answer)button.classList.add('correct');
   if(index===selected&&selected!==item.answer)button.classList.add('incorrect');
  });
- if(selected===item.answer){quizScore++;quizFeedback.textContent='ถูกต้อง! '+item.explain;}
- else{quizFeedback.textContent='ยังไม่ถูกนะ คำตอบที่ถูกคือ '+item.options[item.answer]+' — '+item.explain;}
- quizNextBtn.textContent=quizIndex===farmerQuiz.length-1?'ดูผลคะแนน ▶':'ข้อต่อไป ▶';
+ if(selected===item.answer){
+  quizScore++;
+  quizRetrying=false;
+  quizFeedback.textContent='ถูกต้อง! '+item.explain;
+  quizNextBtn.textContent=quizIndex===farmerQuiz.length-1?'ดูผลการเรียนรู้ ▶':'ข้อต่อไป ▶';
+ }else{
+  quizRetrying=true;
+  quizFeedback.textContent='ยังไม่ถูกต้อง ลองนึกถึงสิ่งที่ชาวนาเล่าอีกครั้งนะจ๊ะ คำใบ้: '+item.hint;
+  quizNextBtn.textContent='ลองตอบอีกครั้ง ↻';
+ }
  quizNextBtn.classList.remove('hidden');
 }
 function openFarmerQuiz(){
- quizIndex=0;quizScore=0;quizShowingResult=false;quizActive=true;
+ quizIndex=0;quizScore=0;quizShowingResult=false;quizRetrying=false;quizActive=true;
  quizPanel.classList.remove('hidden');renderQuizQuestion();
 }
 function finishFarmerQuiz(){
  quizShowingResult=true;
+ stage1Passed=quizScore===farmerQuiz.length;
  quizHeading.textContent='สรุปผลด่านที่ ๑';
  quizProgress.textContent='คะแนน '+quizScore+' / '+farmerQuiz.length;
- quizQuestion.textContent='ทำแบบทดสอบครบทั้ง ๕ ข้อแล้ว!';
+ quizQuestion.textContent=stage1Passed?'ยอดเยี่ยม! เจ้าผ่านด่านวิถีชีวิตชาวนาแล้ว':'ยังตอบไม่ครบทุกข้อ';
  quizAnswers.replaceChildren();
- quizFeedback.textContent='ตอบถูก '+quizScore+' จาก '+farmerQuiz.length+' ข้อ ด่านที่ ๑ เสร็จสมบูรณ์แล้ว';
- quizNextBtn.textContent='กลับไปสำรวจฉาก ▶';
+ quizFeedback.textContent=stage1Passed?'ตอบถูกครบทั้ง ๕ ข้อ ได้รับตราผ่านด่านที่ ๑ และปลดล็อกเงื่อนไขสำหรับด่านถัดไปแล้ว':'ต้องตอบคำถามให้ถูกครบทั้ง ๕ ข้อจึงจะผ่านด่านได้';
+ quizNextBtn.textContent='รับตราผ่านด่าน ▶';
  quizNextBtn.classList.remove('hidden');
 }
 quizNextBtn.addEventListener('click',()=>{
  if(quizShowingResult){
   quizPanel.classList.add('hidden');quizActive=false;
-  objective.textContent='ผ่านด่านที่ ๑ แล้ว! วิถีชีวิตชาวนาในสมัยอยุธยา';
+  objective.textContent=stage1Passed?'ผ่านด่านที่ ๑ แล้ว! ได้รับตราผ่านด่านชาวนา':'กลับไปทบทวนบทเรียนอีกครั้ง';
   return;
  }
+ if(quizRetrying){quizRetrying=false;renderQuizQuestion();return;}
  if(quizIndex<farmerQuiz.length-1){quizIndex++;renderQuizQuestion();}
  else finishFarmerQuiz();
 });
@@ -173,6 +181,10 @@ function interact(){
   coinFound=true;openDialogue(coinLines,()=>{goToScene(3);});return;
  }
  if(s==='farm'&&Math.abs(player.x-farmer.x)<260){
+  if(stage1Passed){
+   openDialogue([student('ข้าผ่านบททดสอบแล้ว! ได้เรียนรู้เรื่องวิถีชีวิตชาวนาในสมัยอยุธยามากขึ้นเลย','happy'),npc('เก่งมากจ้ะ เจ้าจดจำเรื่องราวที่ข้าเล่าได้แล้ว ขอให้เดินทางต่อโดยปลอดภัยนะ','smile')]);
+   return;
+  }
   farmerTalked=true;openDialogue(farmerLines(),openFarmerQuiz);return;
  }
 }
