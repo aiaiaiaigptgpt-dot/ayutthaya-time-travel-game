@@ -10,7 +10,7 @@ let selectedGender=null,playerName='นักเดินทาง',sceneIndex=0
 let started=false,last=0,animationTime=0,coinFound=false,farmerTalked=false;
 const worldWidth=1280;
 const player={x:150,w:150,h:270,speed:320,facing:1,moving:false};
-const farmer={x:895,w:168,h:247};
+const farmer={x:1000,w:168,h:247};
 const images={};
 function image(path){if(!images[path]){const img=new Image();img.src=path;images[path]=img;}return images[path];}
 ['intro-school.png','intro-road.png','pod-duang.png','stage1-farm.png','farmer-normal.png','farmer-smile.png','farmer-explain.png',
@@ -106,7 +106,7 @@ function interact(){
  if(s==='coin'&&!coinFound&&Math.abs(player.x-770)<140){
   coinFound=true;openDialogue(coinLines,()=>{goToScene(3);});return;
  }
- if(s==='farm'&&Math.abs(player.x-farmer.x)<170){
+ if(s==='farm'&&Math.abs(player.x-farmer.x)<260){
   farmerTalked=true;openDialogue(farmerLines(),()=>{objective.textContent='เรียนรู้วิถีชีวิตชาวนาแล้ว! สำรวจฉากต่อได้';});return;
  }
 }
@@ -139,7 +139,7 @@ function update(dt){
  if((id==='school'||id==='road')&&player.x>worldWidth-145){goToScene(sceneIndex+1);return;}
  let message='';
  if(id==='coin'&&!coinFound&&Math.abs(player.x-770)<140)message='กด E เพื่อตรวจดูเงินพดด้วง';
- if(id==='farm'&&Math.abs(player.x-farmer.x)<170)message='กด E เพื่อคุยกับชาวนา';
+ if(id==='farm'&&Math.abs(player.x-farmer.x)<260)message='กด E เพื่อคุยกับชาวนา';
  prompt.textContent=message;prompt.classList.toggle('hidden',!message);
 }
 function drawBackground(){
