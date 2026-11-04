@@ -5,9 +5,12 @@ const canvas=$('game'),ctx=canvas.getContext('2d');
 const objective=$('objective'),prompt=$('interaction-prompt');
 const dialogueBox=$('dialogue-box'),portrait=$('dialogue-portrait');
 const speaker=$('speaker'),dialogueText=$('dialogue-text'),nextBtn=$('dialogue-next-btn');
+const quizPanel=$('quiz-panel'),quizHeading=$('quiz-heading'),quizProgress=$('quiz-progress');
+const quizQuestion=$('quiz-question'),quizAnswers=$('quiz-answers'),quizFeedback=$('quiz-feedback');
+const quizNextBtn=$('quiz-next-btn');
 const keys={left:false,right:false};
 let selectedGender=null,playerName='นักเดินทาง',sceneIndex=0,dialogue=null,dialogueIndex=0,dialogueDone=null;
-let started=false,last=0,animationTime=0,coinFound=false,farmerTalked=false;
+let started=false,last=0,animationTime=0,coinFound=false,farmerTalked=false,quizActive=false,quizIndex=0,quizScore=0,quizShowingResult=false;
 const worldWidth=1280;
 const player={x:150,w:150,h:270,speed:320,facing:1,moving:false};
 const farmer={x:1000,w:168,h:247};
@@ -62,7 +65,7 @@ function advanceDialogue(){
 }
 nextBtn.addEventListener('click',advanceDialogue);
 function startGame(){
- showScreen('game-screen');sceneIndex=0;coinFound=false;farmerTalked=false;player.x=150;
+ showScreen('game-screen');sceneIndex=0;coinFound=false;farmerTalked=false;quizActive=false;quizShowingResult=false;player.x=150;
  objective.textContent=scenes[0].objective;prompt.classList.add('hidden');
  if(!started){started=true;last=performance.now();requestAnimationFrame(frame);}
  openDialogue([
@@ -72,7 +75,7 @@ function startGame(){
 }
 function goToScene(n){
  sceneIndex=n;player.x=130;player.moving=false;
- objective.textContent=scenes[n].objective;prompt.classList.add('hidden');
+ objective.textContent=n===3?'ด่านที่ ๑ : วิถีชีวิตชาวนาในสมัยอยุธยา':scenes[n].objective;prompt.classList.add('hidden');
  if(n===3)openDialogue([
   student('โอ๊ย... เกิดอะไรขึ้นกับฉันเนี่ย!?','surprised'),
   student('ที่นี่... ที่ไหนกัน? ทุกอย่างดูเหมือนสมัยก่อนเลย','worried'),
@@ -86,28 +89,91 @@ const coinLines=[
  student('เดี๋ยวนะ... ทำไมมันมีแสง!?','surprised'),
  student('เกิดอะไรขึ้นเนี่ย!?','worried')
 ];
+// ===== ส่วนแก้ไขบทสนทนาชาวนา: ปรับข้อความใน npc(...) และ student(...) ได้ตรงนี้ =====
 function farmerLines(){
  return [
   student(()=>genderWord('ขอโทษนะครับ ที่นี่ที่ไหนเหรอครับ?','ขอโทษนะคะ ที่นี่ที่ไหนเหรอคะ?'),'worried'),
-  npc('เจ้าถามแปลกนัก ที่นี่ก็คือกรุงศรีอยุธยาอย่างไรเล่า','normal'),
-  student('กรุงศรีอยุธยา!? จริงเหรอ!?','surprised'),
-  npc('จริงสิ เจ้ามาจากที่ใด ถึงได้แต่งกายแปลกตาเช่นนี้?','smile'),
-  student(()=>genderWord('ผมชื่อ '+playerName+' ครับ เมื่อครู่ยังเดินกลับบ้านอยู่เลย','หนูชื่อ '+playerName+' ค่ะ เมื่อครู่ยังเดินกลับบ้านอยู่เลย'),'worried'),
-  npc('ยินดีที่ได้รู้จักนะ '+playerName+' ข้ากำลังทำนาอยู่พอดี','smile'),
-  npc('ผู้คนจำนวนมากในกรุงศรีอยุธยาทำนา เพราะพื้นที่ราบลุ่มและแม่น้ำเอื้ออำนวยต่อการเพาะปลูก','explain'),
-  npc('ข้าวเป็นอาหารสำคัญ และแม่น้ำยังช่วยให้ผู้คนเดินทางค้าขายได้ด้วย','explain'),
-  student('เข้าใจแล้ว ขอบคุณที่เล่าให้ฟังนะ!','normal'),
-  npc('หากอยากรู้เรื่องเมืองนี้มากขึ้น เจ้าลองเดินสำรวจต่อไปเถิด','smile')
+  npc('เจ้ามาถึงกรุงศรีอยุธยาแล้วล่ะ ที่นี่เป็นเมืองใหญ่ที่มีผู้คนอาศัยอยู่มากมาย','normal'),
+  student('ทำไมบริเวณนี้จึงมีทุ่งนาเยอะจังคะ/ครับ?','curious'),
+  npc('เพราะกรุงศรีอยุธยาตั้งอยู่ในบริเวณที่ราบลุ่ม มีแม่น้ำหลายสายไหลผ่าน จึงมีน้ำใช้ในการเพาะปลูก และดินก็ค่อนข้างอุดมสมบูรณ์','explain'),
+  npc('ชาวนาอย่างข้าจะเริ่มจากเตรียมดินและไถนาให้พร้อม จากนั้นจึงนำต้นกล้าข้าวมาปลูกในนา','explain'),
+  npc('เมื่อปลูกแล้วก็ต้องคอยดูแลระดับน้ำ กำจัดวัชพืช และเฝ้าดูต้นข้าวให้เติบโตแข็งแรง','explain'),
+  student('แล้วข้าวมีความสำคัญกับผู้คนในสมัยอยุธยาอย่างไรคะ/ครับ?','curious'),
+  npc('ข้าวเป็นอาหารหลักของผู้คน ทุกบ้านต้องกินข้าว และข้าวยังเป็นผลผลิตสำคัญที่นำไปแลกเปลี่ยนหรือค้าขายได้ด้วย','explain'),
+  npc('นอกจากนั้น แม่น้ำและคลองยังเป็นเส้นทางสำคัญ ผู้คนใช้เดินทางและขนส่งสินค้าไปยังชุมชนต่าง ๆ','explain'),
+  student('เข้าใจแล้วค่ะ/ครับ ทั้งดิน น้ำ และแม่น้ำจึงสำคัญต่อการทำนาและชีวิตของผู้คน','normal'),
+  npc('ถูกต้องแล้วล่ะ หากเจ้าเข้าใจเรื่องที่ข้าเล่าแล้ว ลองตอบคำถามทบทวนความรู้ทั้ง ๕ ข้อดูนะ','smile')
  ];
 }
+
+// ===== แบบทดสอบด่านที่ ๑: แก้ไขคำถาม ตัวเลือก และคำอธิบายได้ตรงนี้ =====
+const farmerQuiz=[
+ {q:'เหตุใดบริเวณกรุงศรีอยุธยาจึงเหมาะแก่การทำนา?',options:['เพราะเป็นที่ราบลุ่ม มีแม่น้ำและดินอุดมสมบูรณ์','เพราะมีภูเขาสูงและอากาศหนาว','เพราะเป็นทะเลทราย','เพราะมีหิมะตกตลอดปี'],answer:0,explain:'ที่ราบลุ่ม มีน้ำจากแม่น้ำ และดินอุดมสมบูรณ์ ช่วยให้เพาะปลูกข้าวได้ดี'},
+ {q:'ชาวนาเตรียมพื้นที่ก่อนปลูกข้าวอย่างไร?',options:['สร้างบ้านกลางทุ่งนา','เตรียมดินและไถนา','ขุดเหมืองแร่','สร้างกำแพงเมือง'],answer:1,explain:'ชาวนาต้องเตรียมดินและไถนาให้พร้อมก่อนนำต้นกล้าข้าวมาปลูก'},
+ {q:'หลังจากปลูกต้นกล้าข้าวแล้ว ชาวนาควรทำสิ่งใด?',options:['ปล่อยทิ้งไว้โดยไม่ดูแล','ตัดต้นข้าวทิ้งทันที','ดูแลน้ำและกำจัดวัชพืช','ย้ายต้นข้าวไปปลูกบนภูเขา'],answer:2,explain:'ต้นข้าวต้องได้รับการดูแล เช่น ดูแลระดับน้ำและกำจัดวัชพืช'},
+ {q:'ข้าวมีความสำคัญต่อผู้คนในสมัยอยุธยาอย่างไร?',options:['ใช้ตกแต่งบ้านเท่านั้น','เป็นอาหารหลักของผู้คน','ใช้สร้างเรือ','ใช้ทำเครื่องมือเหล็ก'],answer:1,explain:'ข้าวเป็นอาหารหลักที่ผู้คนกินในชีวิตประจำวัน และยังเป็นผลผลิตที่นำไปแลกเปลี่ยนค้าขายได้'},
+ {q:'ผู้คนใช้แม่น้ำและคลองในสมัยอยุธยาเพื่อประโยชน์ใด?',options:['ใช้เดินทางและขนส่งสินค้า','ใช้เป็นถนนสำหรับรถยนต์','ใช้ปลูกป่าบนผิวน้ำ','ใช้กั้นไม่ให้ผู้คนติดต่อกัน'],answer:0,explain:'แม่น้ำและคลองเป็นเส้นทางสำคัญสำหรับเดินทางและขนส่งสินค้า'}
+];
+function renderQuizQuestion(){
+ const item=farmerQuiz[quizIndex];
+ quizHeading.textContent='ด่านที่ ๑ : วิถีชีวิตชาวนา';
+ quizProgress.textContent='ข้อ '+(quizIndex+1)+' / '+farmerQuiz.length;
+ quizQuestion.textContent=item.q;
+ quizAnswers.replaceChildren();
+ quizFeedback.textContent='';
+ quizNextBtn.classList.add('hidden');
+ item.options.forEach((option,index)=>{
+  const button=document.createElement('button');
+  button.type='button';button.className='quiz-answer';button.textContent=['ก','ข','ค','ง'][index]+'. '+option;
+  button.addEventListener('click',()=>selectQuizAnswer(index));
+  quizAnswers.append(button);
+ });
+}
+function selectQuizAnswer(selected){
+ const item=farmerQuiz[quizIndex];
+ const buttons=[...quizAnswers.querySelectorAll('button')];
+ buttons.forEach((button,index)=>{
+  button.disabled=true;
+  if(index===item.answer)button.classList.add('correct');
+  if(index===selected&&selected!==item.answer)button.classList.add('incorrect');
+ });
+ if(selected===item.answer){quizScore++;quizFeedback.textContent='ถูกต้อง! '+item.explain;}
+ else{quizFeedback.textContent='ยังไม่ถูกนะ คำตอบที่ถูกคือ '+item.options[item.answer]+' — '+item.explain;}
+ quizNextBtn.textContent=quizIndex===farmerQuiz.length-1?'ดูผลคะแนน ▶':'ข้อต่อไป ▶';
+ quizNextBtn.classList.remove('hidden');
+}
+function openFarmerQuiz(){
+ quizIndex=0;quizScore=0;quizShowingResult=false;quizActive=true;
+ quizPanel.classList.remove('hidden');renderQuizQuestion();
+}
+function finishFarmerQuiz(){
+ quizShowingResult=true;
+ quizHeading.textContent='สรุปผลด่านที่ ๑';
+ quizProgress.textContent='คะแนน '+quizScore+' / '+farmerQuiz.length;
+ quizQuestion.textContent='ทำแบบทดสอบครบทั้ง ๕ ข้อแล้ว!';
+ quizAnswers.replaceChildren();
+ quizFeedback.textContent='ตอบถูก '+quizScore+' จาก '+farmerQuiz.length+' ข้อ ด่านที่ ๑ เสร็จสมบูรณ์แล้ว';
+ quizNextBtn.textContent='กลับไปสำรวจฉาก ▶';
+ quizNextBtn.classList.remove('hidden');
+}
+quizNextBtn.addEventListener('click',()=>{
+ if(quizShowingResult){
+  quizPanel.classList.add('hidden');quizActive=false;
+  objective.textContent='ผ่านด่านที่ ๑ แล้ว! วิถีชีวิตชาวนาในสมัยอยุธยา';
+  return;
+ }
+ if(quizIndex<farmerQuiz.length-1){quizIndex++;renderQuizQuestion();}
+ else finishFarmerQuiz();
+});
 function interact(){
+ if(quizActive)return;
  if(dialogue){advanceDialogue();return;}
  const s=scenes[sceneIndex].id;
  if(s==='coin'&&!coinFound&&Math.abs(player.x-770)<140){
   coinFound=true;openDialogue(coinLines,()=>{goToScene(3);});return;
  }
  if(s==='farm'&&Math.abs(player.x-farmer.x)<260){
-  farmerTalked=true;openDialogue(farmerLines(),()=>{objective.textContent='เรียนรู้วิถีชีวิตชาวนาแล้ว! สำรวจฉากต่อได้';});return;
+  farmerTalked=true;openDialogue(farmerLines(),openFarmerQuiz);return;
  }
 }
 $('interact-btn').addEventListener('click',interact);
@@ -131,7 +197,7 @@ function hold(id,key){
 hold('left-btn','left');hold('right-btn','right');
 function update(dt){
  animationTime+=dt;
- if(dialogue||$('game-screen').classList.contains('hidden')){player.moving=false;return;}
+ if(dialogue||quizActive||$('game-screen').classList.contains('hidden')){player.moving=false;return;}
  const dir=Number(keys.right)-Number(keys.left);
  player.moving=dir!==0;
  if(dir){player.facing=dir;player.x=Math.max(45,Math.min(worldWidth-80,player.x+dir*player.speed*dt));}
