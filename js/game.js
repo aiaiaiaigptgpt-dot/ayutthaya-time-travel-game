@@ -232,7 +232,7 @@ const marketQuiz=[
  {q:'ตลาดมีประโยชน์ต่อผู้คนอย่างไร?',options:['เป็นที่พบปะและซื้อขายแลกเปลี่ยนสินค้า','เป็นสถานที่ใช้เก็บอาวุธเท่านั้น','เป็นสถานที่สำหรับปลูกข้าว'],answer:0,explain:'ตลาดเป็นแหล่งซื้อขายแลกเปลี่ยนสินค้าและเป็นที่พบปะของผู้คน'},
  {q:'เหตุใดตลาดริมน้ำในสมัยอยุธยาจึงคึกคัก?',options:['เพราะผู้คนเดินทางและขนสินค้ามาซื้อขายทางน้ำ','เพราะไม่มีผู้คนอาศัยอยู่','เพราะห้ามนำสินค้าเข้ามาขาย'],answer:0,explain:'แม่น้ำเป็นเส้นทางสำคัญที่ช่วยให้ผู้คนเดินทางและขนส่งสินค้ามาค้าขายได้สะดวก'}
 ];
-let stage3Passed=false;
+
 function openMarketQuiz(){
  quizIndex=0;quizScore=0;quizShowingResult=false;quizRetrying=false;quizActive=true;
  quizPanel.classList.remove('hidden');renderMarketQuizQuestion();
