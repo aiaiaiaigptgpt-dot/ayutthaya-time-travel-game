@@ -10,7 +10,7 @@ const quizQuestion=$('quiz-question'),quizAnswers=$('quiz-answers'),quizFeedback
 const quizNextBtn=$('quiz-next-btn');
 const keys={left:false,right:false};
 let selectedGender=null,playerName='นักเดินทาง',sceneIndex=0,dialogue=null,dialogueIndex=0,dialogueDone=null;
-let started=false,last=0,animationTime=0,coinFound=false,farmerTalked=false,quizActive=false,quizIndex=0,quizScore=0,quizShowingResult=false,quizRetrying=false,stage1Passed=false,farmIntroSeen=false;
+let started=false,last=0,animationTime=0,coinFound=false,farmerTalked=false,quizActive=false,quizIndex=0,quizScore=0,quizShowingResult=false,quizRetrying=false,stage1Passed=false,farmIntroSeen=false,stage3Passed=false;
 const worldWidth=1280;
 const player={x:150,w:150,h:270,speed:320,facing:1,moving:false};
 const farmer={x:1000,w:168,h:247};
@@ -101,7 +101,7 @@ function advanceDialogue(){
 previousBtn.addEventListener('click',goBackDialogue);
 nextBtn.addEventListener('click',advanceDialogue);
 function startGame(){
- showScreen('game-screen');sceneIndex=0;coinFound=false;farmerTalked=false;quizActive=false;quizShowingResult=false;quizRetrying=false;stage1Passed=false;stage2Passed=false;farmIntroSeen=false;player.x=150;
+ showScreen('game-screen');sceneIndex=0;coinFound=false;farmerTalked=false;quizActive=false;quizShowingResult=false;quizRetrying=false;stage1Passed=false;stage2Passed=false;stage3Passed=false;farmIntroSeen=false;player.x=150;
  objective.textContent=scenes[0].objective;prompt.classList.add('hidden');
  if(!started){started=true;last=performance.now();requestAnimationFrame(frame);}
  openDialogue([
@@ -224,6 +224,55 @@ function merchantLines(){
  ];
 }
 
+// ===== แบบทดสอบด่านที่ ๓: ตลาดในกรุงศรีอยุธยา =====
+const marketQuiz=[
+ {q:'ข้อใดเป็นสินค้าที่พบได้ในตลาดสมัยอยุธยา?',options:['ข้าว ผลไม้ ผัก และปลา','โทรศัพท์และคอมพิวเตอร์','รถยนต์และเครื่องใช้ไฟฟ้า'],answer:0,explain:'ตลาดมีสินค้าจากการเกษตรและของกินของใช้ เช่น ข้าว ผลไม้ ผัก และปลา'},
+ {q:'แม่ค้าได้รับสินค้าบางส่วนมาจากที่ใด?',options:['จากสวนและไร่นาของชาวบ้าน','จากโรงงานผลิตรถยนต์','จากต่างประเทศเท่านั้น'],answer:0,explain:'สินค้าหลายชนิดมาจากสวนและไร่นาของชาวบ้าน รวมถึงชุมชนอื่น ๆ'},
+ {q:'ผู้คนในสมัยอยุธยาใช้เส้นทางใดนำสินค้ามาขายที่ตลาดริมน้ำ?',options:['ทางรถไฟ','ทางเรือ','ทางเครื่องบิน'],answer:1,explain:'ผู้คนนิยมพายเรือบรรทุกสินค้ามาซื้อขายตามตลาดริมน้ำ'},
+ {q:'ตลาดมีประโยชน์ต่อผู้คนอย่างไร?',options:['เป็นที่พบปะและซื้อขายแลกเปลี่ยนสินค้า','เป็นสถานที่ใช้เก็บอาวุธเท่านั้น','เป็นสถานที่สำหรับปลูกข้าว'],answer:0,explain:'ตลาดเป็นแหล่งซื้อขายแลกเปลี่ยนสินค้าและเป็นที่พบปะของผู้คน'},
+ {q:'เหตุใดตลาดริมน้ำในสมัยอยุธยาจึงคึกคัก?',options:['เพราะผู้คนเดินทางและขนสินค้ามาซื้อขายทางน้ำ','เพราะไม่มีผู้คนอาศัยอยู่','เพราะห้ามนำสินค้าเข้ามาขาย'],answer:0,explain:'แม่น้ำเป็นเส้นทางสำคัญที่ช่วยให้ผู้คนเดินทางและขนส่งสินค้ามาค้าขายได้สะดวก'}
+];
+let stage3Passed=false;
+function openMarketQuiz(){
+ quizIndex=0;quizScore=0;quizShowingResult=false;quizRetrying=false;quizActive=true;
+ quizPanel.classList.remove('hidden');renderMarketQuizQuestion();
+}
+function renderMarketQuizQuestion(){
+ const item=marketQuiz[quizIndex];
+ quizHeading.textContent='ด่านที่ ๓ : ตลาดในกรุงศรีอยุธยา';
+ quizProgress.textContent='ข้อ '+(quizIndex+1)+' / '+marketQuiz.length;
+ quizQuestion.textContent=item.q;quizAnswers.replaceChildren();quizFeedback.textContent='';
+ quizNextBtn.classList.add('hidden');
+ item.options.forEach((option,index)=>{
+  const button=document.createElement('button');
+  button.type='button';button.className='quiz-answer';button.textContent=['ก','ข','ค'][index]+'. '+option;
+  button.addEventListener('click',()=>selectMarketQuizAnswer(index));
+  quizAnswers.append(button);
+ });
+}
+function selectMarketQuizAnswer(selected){
+ const item=marketQuiz[quizIndex];
+ const buttons=[...quizAnswers.querySelectorAll('button')];
+ buttons.forEach((button,index)=>{
+  button.disabled=true;
+  if(index===selected&&selected===item.answer)button.classList.add('correct');
+  if(index===selected&&selected!==item.answer)button.classList.add('incorrect');
+ });
+ if(selected===item.answer){quizScore++;quizFeedback.textContent='ถูกต้อง! '+item.explain;}
+ else quizFeedback.textContent='ยังไม่ถูกต้องนะ ลองทบทวนบทสนทนากับแม่ค้าอีกครั้งได้ คำตอบที่ถูกคือ '+['ก','ข','ค'][item.answer]+'. '+item.options[item.answer]+'. '+item.explain;
+ quizNextBtn.textContent=quizIndex===marketQuiz.length-1?'ดูผลการเรียนรู้ ▶':'ข้อต่อไป ▶';
+ quizNextBtn.classList.remove('hidden');
+}
+function finishMarketQuiz(){
+ quizShowingResult=true;stage3Passed=true;
+ quizHeading.textContent='สรุปผลด่านที่ ๓';
+ quizProgress.textContent='คะแนน '+quizScore+' / '+marketQuiz.length;
+ quizQuestion.textContent='ทำแบบทดสอบครบแล้ว! ผ่านด่านตลาดในกรุงศรีอยุธยา';
+ quizAnswers.replaceChildren();
+ quizFeedback.textContent='เจ้าได้เรียนรู้เรื่องสินค้าที่ซื้อขาย แหล่งที่มาของสินค้า และความสำคัญของตลาดริมน้ำแล้ว';
+ quizNextBtn.textContent='กลับไปสำรวจตลาด ▶';quizNextBtn.classList.remove('hidden');
+}
+
 // ===== แบบทดสอบด่านที่ ๒: การเดินทางทางเรือ =====
 const boatQuiz=[
  {q:'เพราะเหตุใดผู้คนในสมัยอยุธยาจึงนิยมเดินทางทางเรือ?',options:['เพราะมีแม่น้ำและคลองหลายสาย','เพราะไม่มีพาหนะชนิดอื่น','เพราะทุกคนต้องเดินทางทางเรือเท่านั้น'],answer:0,explain:'อยุธยามีแม่น้ำและคลองหลายสาย ผู้คนจึงใช้เรือเดินทางได้สะดวก'},
@@ -333,6 +382,17 @@ function finishFarmerQuiz(){
  quizNextBtn.classList.remove('hidden');
 }
 quizNextBtn.addEventListener('click',()=>{
+ const isMarketQuiz=quizHeading.textContent.includes('ด่านที่ ๓')||quizHeading.textContent.includes('สรุปผลด่านที่ ๓');
+ if(isMarketQuiz){
+  if(quizShowingResult){
+   quizPanel.classList.add('hidden');quizActive=false;
+   objective.textContent='ด่านที่ ๓ ผ่านแล้ว: เดินสำรวจตลาดในกรุงศรีอยุธยาได้ตามสบาย';
+   return;
+  }
+  if(quizIndex<marketQuiz.length-1){quizIndex++;renderMarketQuizQuestion();}
+  else finishMarketQuiz();
+  return;
+ }
  const isBoatQuiz=quizHeading.textContent.includes('ด่านที่ ๒')||quizHeading.textContent.includes('สรุปผลด่านที่ ๒');
  if(isBoatQuiz){
   if(quizShowingResult){
@@ -368,7 +428,8 @@ function interact(){
   return;
  }
  if(s==='market'&&Math.abs(player.x-merchant.x)<270){
-  openDialogue(merchantLines());
+  if(stage3Passed)openDialogue(merchantLines());
+  else openDialogue(merchantLines(),openMarketQuiz);
   return;
  }
  if(s==='coin'&&Math.abs(player.x-770)<140){
