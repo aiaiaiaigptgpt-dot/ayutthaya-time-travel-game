@@ -25,21 +25,21 @@ function preloadScene(index){const scene=scenes[index];if(scene&&scene.bg)image(
 function preloadDialoguePortraits(){
  const emotions=['normal','curious','surprised','worried','explain','smile','point'];
  const files=[];
- for(const gender of ['boy','girl'])for(const emotion of emotions)files.push(`student-${gender}-${emotion}.png`);
- for(const emotion of ['normal','explain','smile','point'])files.push(`farmer-${emotion}.png`);
- for(const emotion of ['normal','explain','point','greeting'])files.push(`boatman-${emotion}.png`);
- for(const emotion of ['smile','explain','point'])files.push(`merchant-${emotion}.png`);
+ for(const gender of ['boy','girl'])for(const emotion of emotions)files.push(`student-${gender}-${emotion}.webp`);
+ for(const emotion of ['normal','explain','smile','point'])files.push(`farmer-${emotion}.webp`);
+ for(const emotion of ['normal','explain','point','greeting'])files.push(`boatman-${emotion}.webp`);
+ for(const emotion of ['smile','explain','point'])files.push(`merchant-${emotion}.webp`);
  files.forEach(path=>{const img=image(path);if(typeof img.decode==='function')img.decode().catch(()=>{});});
 }
 // ภาพตัวละครและฉากอื่น ๆ จะถูกโหลดเมื่อจำเป็น
 const scenes=[
- {id:'school',bg:'intro-school.png',objective:'เดินไปทางขวาเพื่อกลับบ้าน'},
- {id:'road',bg:'intro-road.png',objective:'เดินต่อไปตามทางกลับบ้าน'},
- {id:'coin',bg:'pod-duang.png',objective:'มีบางอย่างแปลก ๆ อยู่บนพื้น ลองเดินไปสำรวจ'},
- {id:'farm',bg:'stage1-farm.png',objective:'นี่คือที่ไหนกันนะ? เดินไปถามชาวนาดูสิ'},
+ {id:'school',bg:'intro-school.webp',objective:'เดินไปทางขวาเพื่อกลับบ้าน'},
+ {id:'road',bg:'intro-road.webp',objective:'เดินต่อไปตามทางกลับบ้าน'},
+ {id:'coin',bg:'pod-duang.webp',objective:'มีบางอย่างแปลก ๆ อยู่บนพื้น ลองเดินไปสำรวจ'},
+ {id:'farm',bg:'stage1-farm.webp',objective:'นี่คือที่ไหนกันนะ? เดินไปถามชาวนาดูสิ'},
  {id:'boat',bg:null,objective:'ด่านที่ ๒ : การเดินทางทางเรือเข้าสู่พระนคร'},
  {id:'market',bg:'marketplace-bg.jpg',objective:'ด่านที่ ๓ : สำรวจตลาดในกรุงศรีอยุธยา'},
- {id:'port',bg:'stage4-port.png',objective:'ด่านที่ ๔ : เดินไปทางซ้ายเพื่อสำรวจท่ารับสินค้าจากหัวเมือง'}
+ {id:'port',bg:'stage4-port.webp',objective:'ด่านที่ ๔ : เดินไปทางซ้ายเพื่อสำรวจท่ารับสินค้าจากหัวเมือง'}
 ];
 // Display a clear loading state while the current scene's actual image is downloading.
 let loadingRequest=0;
@@ -113,10 +113,10 @@ function showDialogueLine(){
  dialogueText.textContent=typeof d.text==='function'?d.text():d.text;
  portrait.classList.remove('hidden');
  let portraitPath;
- if(d.who==='farmer')portraitPath='farmer-'+d.emotion+'.png';
- else if(d.who==='boatman')portraitPath='boatman-'+(d.emotion==='smile'?'greeting':d.emotion)+'.png';
- else if(d.who==='merchant')portraitPath='merchant-'+d.emotion+'.png';
- else portraitPath='student-'+selectedGender+'-'+d.emotion+'.png';
+ if(d.who==='farmer')portraitPath='farmer-'+d.emotion+'.webp';
+ else if(d.who==='boatman')portraitPath='boatman-'+(d.emotion==='smile'?'greeting':d.emotion)+'.webp';
+ else if(d.who==='merchant')portraitPath='merchant-'+d.emotion+'.webp';
+ else portraitPath='student-'+selectedGender+'-'+d.emotion+'.webp';
  const portraitAsset=image(portraitPath);
  // Do not display the previous speaker while a new portrait is downloading.
  // Each line keeps its own request ID so late network responses cannot overwrite it.
@@ -172,7 +172,7 @@ function goToScene(n,direction='forward'){
  player.x=n===6?worldWidth-170:(direction==='backward'?worldWidth-145:130);
  player.facing=n===6?-1:direction==='backward'?-1:1;
  player.moving=false;
- if(n===4)scenes[n].bg=selectedGender==='girl'?'boat-ride-girl.png':'boat-ride-boy.png';
+ if(n===4)scenes[n].bg=selectedGender==='girl'?'boat-ride-girl.webp':'boat-ride-boy.webp';
  preloadScene(n);preloadScene(n+1);
  waitForVisual(scenes[n].bg);
  objective.textContent=scenes[n].objective;
@@ -577,7 +577,7 @@ function drawWalkSprite(img,frameIndex,x,ground,width,height,facing){
  return true;
 }
 function drawFarmer(x,ground){
- const img=image('farmer-idle.png');
+ const img=image('farmer-idle.webp');
  if(!img.complete||!img.naturalWidth)return;
  const w=farmer.w,h=farmer.h;
  // Preserve source aspect ratio: the farmer image is naturally portrait-oriented.
@@ -600,7 +600,7 @@ function draw(){
   }
  }
  if(id==='port'){
-  const officerImg=image('port-officer-idle.png');
+  const officerImg=image('port-officer-idle.webp');
   if(officerImg.complete&&officerImg.naturalWidth){
    const w=portOfficer.w,h=portOfficer.h;
    ctx.drawImage(officerImg,Math.round(portOfficer.x-w/2),Math.round(ground-h),w,h);
@@ -611,7 +611,7 @@ function draw(){
   }
  }
  if(id==='market'){
-  const merchantImg=image('merchant-idle.png');
+  const merchantImg=image('merchant-idle.webp');
   if(merchantImg.complete&&merchantImg.naturalWidth){
    const w=merchant.w,h=merchant.h;
    ctx.save();ctx.translate(Math.round(merchant.x),0);ctx.scale(-1,1);
