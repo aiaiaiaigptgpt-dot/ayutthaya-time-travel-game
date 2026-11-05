@@ -23,6 +23,7 @@ jobs:
         run: python -m pip install --disable-pip-version-check Pillow
       - name: Optimize all PNG game assets and update references
         run: |
+          python - <<'PY'
           from pathlib import Path
           from PIL import Image
           import re
@@ -76,6 +77,7 @@ jobs:
           after = sum(p.stat().st_size for p in root.glob("*.webp"))
           print("TOTAL_PNG_MB", round(before/1048576,2))
           print("TOTAL_WEBP_MB", round(after/1048576,2))
+          PY
       - name: Validate JavaScript
         run: node --check js/game.js
       - name: Commit optimized assets
