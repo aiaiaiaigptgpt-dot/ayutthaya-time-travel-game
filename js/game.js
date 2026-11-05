@@ -41,7 +41,32 @@ const scenes=[
  {id:'market',bg:'marketplace-bg.jpg',objective:'ด่านที่ ๓ : สำรวจตลาดในกรุงศรีอยุธยา'},
  {id:'port',bg:'stage4-port.png',objective:'ด่านที่ ๔ : เดินไปทางซ้ายเพื่อสำรวจท่ารับสินค้าจากหัวเมือง'}
 ];
-function showScreen(id){for(const s of screens)$(s).classList.toggle('hidden',s!==id);$('controls').classList.toggle('hidden',id!=='game-screen');}
+// Display a clear loading state while the current scene's actual image is downloading.
+let loadingRequest=0;
+function waitForVisual(path){
+ const request=++loadingRequest;
+ const overlay=$('loading-overlay');
+ overlay.classList.remove('hidden');
+ const img=image(path);
+ const finish=()=>{
+  if(request!==loadingRequest)return;
+  overlay.classList.add('hidden');
+ };
+ if(img.complete){finish();return;}
+ img.addEventListener('load',finish,{once:true});
+ img.addEventListener('error',finish,{once:true});
+}
+function showScreen(id){
+ for(const s of screens)$(s).classList.toggle('hidden',s!==id);
+ $('controls').classList.toggle('hidden',id!=='game-screen');
+ const screen=$(id);
+ const bg=screen.dataset.bg;
+ if(bg){
+  screen.style.backgroundImage='url("'+bg+'")';
+  waitForVisual(bg);
+ }else if(id==='game-screen')waitForVisual(scenes[sceneIndex].bg);
+ else {loadingRequest++;$('loading-overlay').classList.add('hidden');}
+}
 $('start-btn').addEventListener('click',()=>showScreen('select-screen'));
 function choose(gender){
  selectedGender=gender;
@@ -92,6 +117,7 @@ function showDialogueLine(){
  else if(d.who==='merchant')portraitPath='merchant-'+d.emotion+'.png';
  else portraitPath='student-'+selectedGender+'-'+d.emotion+'.png';
  const portraitAsset=image(portraitPath);
+ // Only load portrait for the spoken line, not every NPC expression at game start.
  if(portrait.src!==portraitAsset.src)portrait.src=portraitAsset.src;
  portrait.alt=speaker.textContent;
  previousBtn.disabled=dialogueIndex===0;
@@ -121,7 +147,7 @@ nextBtn.addEventListener('click',advanceDialogue);
 function startGame(){
  showScreen('game-screen');sceneIndex=0;coinFound=false;farmerTalked=false;quizActive=false;quizShowingResult=false;quizRetrying=false;stage1Passed=false;stage2Passed=false;stage3Passed=false;farmIntroSeen=false;player.x=150;
  objective.textContent=scenes[0].objective;prompt.classList.add('hidden');
-  preloadScene(0);preloadScene(1);preloadDialoguePortraits();
+  preloadScene(0);preloadScene(1);
  if(!started){started=true;last=performance.now();requestAnimationFrame(frame);}
  openDialogue([
   student(()=>genderWord('วันนี้เลิกเรียนแล้ว รีบกลับบ้านดีกว่า','วันนี้เลิกเรียนแล้ว รีบกลับบ้านดีกว่า'),'normal'),
@@ -135,6 +161,7 @@ function goToScene(n,direction='forward'){
  player.moving=false;
  if(n===4)scenes[n].bg=selectedGender==='girl'?'boat-ride-girl.png':'boat-ride-boy.png';
  preloadScene(n);preloadScene(n+1);
+ waitForVisual(scenes[n].bg);
  objective.textContent=scenes[n].objective;
  prompt.classList.add('hidden');
  if(n===3&&!farmIntroSeen){
