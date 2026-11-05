@@ -81,7 +81,7 @@ button:disabled{opacity:.55;cursor:not-allowed}
 
 /* Stage 3: fix both dialogue portrait position and gaze independent of other scenes. */
 #dialogue-box.market-student{flex-direction:row!important}
-#dialogue-box.market-student #dialogue-portrait{order:0;transform:scaleX(-1)!important;transform-origin:center center}
+#dialogue-box.market-student #dialogue-portrait{order:0;transform:none!important;transform-origin:center center}
 #dialogue-box.market-student .dialogue-content{order:1;padding:12px 18px 8px 4px}
 #dialogue-box.market-merchant{flex-direction:row-reverse!important}
 #dialogue-box.market-merchant #dialogue-portrait{order:0;transform:scaleX(-1)!important;transform-origin:center center}
