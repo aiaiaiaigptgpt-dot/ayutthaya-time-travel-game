@@ -110,6 +110,9 @@ function showDialogueLine(){
  // ด่านเรือเท่านั้นที่ใช้ภาพนักเรียนด้านขวาของกล่องสนทนา
  dialogueBox.classList.toggle('student-left',d.who==='student'&&sceneIndex!==4);
  dialogueBox.classList.toggle('student-right',d.who==='student'&&sceneIndex===4);
+ // Market scene has its own fixed portrait side and facing direction.
+ dialogueBox.classList.toggle('market-student',sceneIndex===5&&d.who==='student');
+ dialogueBox.classList.toggle('market-merchant',sceneIndex===5&&d.who==='merchant');
  speaker.textContent=d.who==='farmer'?'ชาวนา':d.who==='boatman'?'คนพายเรือ':d.who==='merchant'?'แม่ค้า':playerName;
  dialogueText.textContent=typeof d.text==='function'?d.text():d.text;
  portrait.classList.remove('hidden');
