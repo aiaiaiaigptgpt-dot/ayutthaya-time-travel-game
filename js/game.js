@@ -13,8 +13,8 @@ let selectedGender=null,playerName='นักเดินทาง',sceneIndex=0
 let started=false,last=0,animationTime=0,coinFound=false,farmerTalked=false,quizActive=false,quizIndex=0,quizScore=0,quizShowingResult=false,quizRetrying=false,stage1Passed=false,farmIntroSeen=false,stage3Passed=false,stage4Passed=false,portIntroSeen=false;
 const worldWidth=1280;
 const player={x:150,w:150,h:270,speed:320,facing:1,moving:false};
-const farmer={x:1000,w:168,h:247};
-const merchant={x:1040,w:190,h:270};
+const farmer={x:1000,w:225,h:330};
+const merchant={x:1040,w:236,h:335};
 // Stage 4: student enters at the left marker; the port officer stands at the right marker.
 const portOfficer={x:1120,w:220,h:340};
 const images={};
