@@ -688,7 +688,7 @@ function draw(){
  // ภาพฉากเรือมีนักเรียนและคนพายเรืออยู่ในภาพแล้ว จึงไม่วาดตัวละครซ้ำทับ
  if(id==='boat')return;
  // Raise both characters only in the farm scene so they stand safely inside the grassy path.
- const ground=id==='farm'?590:632;
+ const ground=id==='farm'?590:id==='port'?595:632;
  if(id==='farm'){
   drawFarmer(farmer.x,ground);
   if(Math.abs(player.x-farmer.x)<175){
