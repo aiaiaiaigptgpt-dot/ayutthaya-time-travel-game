@@ -96,7 +96,7 @@ button:disabled{opacity:.55;cursor:not-allowed}
 #dialogue-box.port-officer{flex-direction:row-reverse!important}
 #dialogue-box.port-officer #dialogue-portrait{order:0;transform:scaleX(-1)!important}
 /* Pointing art already points left in its source; avoid flipping it to the right. */
-#dialogue-box.port-officer.port-officer-point #dialogue-portrait{transform:scaleX(-1)!important}
+#dialogue-box.port-officer.port-officer-point #dialogue-portrait{transform:none!important}
 #dialogue-box.port-officer .dialogue-content{order:1;padding:12px 4px 8px 18px}
 @media(max-width:650px){
  #dialogue-box.port-student .dialogue-content{padding:5px 8px 3px 0}
