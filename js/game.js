@@ -15,6 +15,8 @@ const worldWidth=1280;
 const player={x:150,w:150,h:270,speed:320,facing:1,moving:false};
 const farmer={x:1000,w:168,h:247};
 const merchant={x:1040,w:190,h:270};
+// Stage 4: officer left, student arrives on right.
+const portOfficer={x:265,w:165,h:265};
 const images={};
 function image(path){if(!images[path]){const img=new Image();img.decoding='async';img.loading='eager';img.src=path;images[path]=img;}return images[path];}
 // เตรียมภาพฉากถัดไปล่วงหน้า เพื่อลดเวลารอเมื่อผู้เล่นเดินทางเปลี่ยนด่าน
@@ -36,7 +38,8 @@ const scenes=[
  {id:'coin',bg:'pod-duang.png',objective:'มีบางอย่างแปลก ๆ อยู่บนพื้น ลองเดินไปสำรวจ'},
  {id:'farm',bg:'stage1-farm.png',objective:'นี่คือที่ไหนกันนะ? เดินไปถามชาวนาดูสิ'},
  {id:'boat',bg:null,objective:'ด่านที่ ๒ : การเดินทางทางเรือเข้าสู่พระนคร'},
- {id:'market',bg:'marketplace-bg.jpg',objective:'ด่านที่ ๓ : สำรวจตลาดในกรุงศรีอยุธยา'}
+ {id:'market',bg:'marketplace-bg.jpg',objective:'ด่านที่ ๓ : สำรวจตลาดในกรุงศรีอยุธยา'},
+ {id:'port',bg:'stage4-port.png',objective:'ด่านที่ ๔ : เดินไปทางซ้ายเพื่อสำรวจท่ารับสินค้าจากหัวเมือง'}
 ];
 function showScreen(id){for(const s of screens)$(s).classList.toggle('hidden',s!==id);$('controls').classList.toggle('hidden',id!=='game-screen');}
 $('start-btn').addEventListener('click',()=>showScreen('select-screen'));
@@ -127,7 +130,8 @@ function startGame(){
 }
 function goToScene(n,direction='forward'){
  sceneIndex=n;
- player.x=direction==='backward'?worldWidth-145:130;
+ player.x=n===6?worldWidth-170:(direction==='backward'?worldWidth-145:130);
+ player.facing=n===6?-1:direction==='backward'?-1:1;
  player.moving=false;
  if(n===4)scenes[n].bg=selectedGender==='girl'?'boat-ride-girl.png':'boat-ride-boy.png';
  preloadScene(n);preloadScene(n+1);
@@ -492,7 +496,8 @@ function update(dt){
  if(player.x>worldWidth-145&&(
   (sceneIndex<3&&(id==='school'||id==='road'||(id==='coin'&&coinFound)))||
   (id==='farm'&&stage1Passed)||
-  (id==='boat'&&stage2Passed)
+  (id==='boat'&&stage2Passed)||
+  (id==='market'&&stage3Passed)
  )){
   goToScene(sceneIndex+1,'forward');return;
  }
@@ -552,6 +557,17 @@ function draw(){
    ctx.font='bold 21px system-ui';
    ctx.fillStyle='#fff6db';ctx.textAlign='center';
    ctx.fillText('ชาวนา',farmer.x,ground-farmer.h-9);
+  }
+ }
+ if(id==='port'){
+  const officerImg=image('port-officer-idle.png');
+  if(officerImg.complete&&officerImg.naturalWidth){
+   const w=portOfficer.w,h=portOfficer.h;
+   ctx.drawImage(officerImg,Math.round(portOfficer.x-w/2),Math.round(ground-h),w,h);
+   if(Math.abs(player.x-portOfficer.x)<225){
+    ctx.font='bold 19px system-ui';ctx.fillStyle='#fff6db';ctx.textAlign='center';
+    ctx.fillText('เจ้าพนักงานท่ารับสินค้า',portOfficer.x,ground-h-10);
+   }
   }
  }
  if(id==='market'){
