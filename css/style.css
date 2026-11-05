@@ -78,3 +78,12 @@ button:disabled{opacity:.55;cursor:not-allowed}
 .loading-card span{font-size:14px;color:#e1d0e8}
 .loading-spinner{width:40px;height:40px;border:4px solid #856ba8;border-top-color:#ffcf67;border-radius:50%;animation:loading-spin .9s linear infinite}
 @keyframes loading-spin{to{transform:rotate(360deg)}}
+
+/* Stage 3: fix both dialogue portrait position and gaze independent of other scenes. */
+#dialogue-box.market-student{flex-direction:row!important}
+#dialogue-box.market-student #dialogue-portrait{order:0;transform:scaleX(-1)!important;transform-origin:center center}
+#dialogue-box.market-student .dialogue-content{order:1;padding:12px 18px 8px 4px}
+#dialogue-box.market-merchant{flex-direction:row-reverse!important}
+#dialogue-box.market-merchant #dialogue-portrait{order:0;transform:scaleX(-1)!important;transform-origin:center center}
+#dialogue-box.market-merchant .dialogue-content{order:1;padding:12px 4px 8px 18px}
+@media(max-width:650px){#dialogue-box.market-student .dialogue-content{padding:5px 8px 3px 0}#dialogue-box.market-merchant .dialogue-content{padding:5px 0 3px 8px}}
