@@ -10,7 +10,7 @@ const quizQuestion=$('quiz-question'),quizAnswers=$('quiz-answers'),quizFeedback
 const quizNextBtn=$('quiz-next-btn');
 const keys={left:false,right:false};
 let selectedGender=null,playerName='นักเดินทาง',sceneIndex=0,dialogue=null,dialogueIndex=0,dialogueDone=null;
-let started=false,last=0,animationTime=0,coinFound=false,farmerTalked=false,quizActive=false,quizIndex=0,quizScore=0,quizShowingResult=false,quizRetrying=false,stage1Passed=false,farmIntroSeen=false,stage3Passed=false;
+let started=false,last=0,animationTime=0,coinFound=false,farmerTalked=false,quizActive=false,quizIndex=0,quizScore=0,quizShowingResult=false,quizRetrying=false,stage1Passed=false,farmIntroSeen=false,stage3Passed=false,stage4Passed=false,portIntroSeen=false;
 const worldWidth=1280;
 const player={x:150,w:150,h:270,speed:320,facing:1,moving:false};
 const farmer={x:1000,w:168,h:247};
@@ -113,13 +113,16 @@ function showDialogueLine(){
  // Market scene has its own fixed portrait side and facing direction.
  dialogueBox.classList.toggle('market-student',sceneIndex===5&&d.who==='student');
  dialogueBox.classList.toggle('market-merchant',sceneIndex===5&&d.who==='merchant');
- speaker.textContent=d.who==='farmer'?'ชาวนา':d.who==='boatman'?'คนพายเรือ':d.who==='merchant'?'แม่ค้า':playerName;
+ dialogueBox.classList.toggle('port-student',sceneIndex===6&&d.who==='student');
+ dialogueBox.classList.toggle('port-officer',sceneIndex===6&&d.who==='portOfficer');
+ speaker.textContent=d.who==='farmer'?'ชาวนา':d.who==='boatman'?'คนพายเรือ':d.who==='merchant'?'แม่ค้า':d.who==='portOfficer'?'นายท่ารับสินค้า':playerName;
  dialogueText.textContent=typeof d.text==='function'?d.text():d.text;
  portrait.classList.remove('hidden');
  let portraitPath;
  if(d.who==='farmer')portraitPath='farmer-'+d.emotion+'.webp';
  else if(d.who==='boatman')portraitPath='boatman-'+(d.emotion==='smile'?'greeting':d.emotion)+'.webp';
  else if(d.who==='merchant')portraitPath='merchant-'+d.emotion+'.webp';
+ else if(d.who==='portOfficer')portraitPath='port-officer-'+d.emotion+'.webp';
  else portraitPath='student-'+selectedGender+'-'+d.emotion+'.webp';
  const portraitAsset=image(portraitPath);
  // Do not display the previous speaker while a new portrait is downloading.
@@ -162,7 +165,7 @@ function advanceDialogue(){
 previousBtn.addEventListener('click',goBackDialogue);
 nextBtn.addEventListener('click',advanceDialogue);
 function startGame(){
- showScreen('game-screen');sceneIndex=0;coinFound=false;farmerTalked=false;quizActive=false;quizShowingResult=false;quizRetrying=false;stage1Passed=false;stage2Passed=false;stage3Passed=false;farmIntroSeen=false;player.x=150;
+ showScreen('game-screen');sceneIndex=0;coinFound=false;farmerTalked=false;quizActive=false;quizShowingResult=false;quizRetrying=false;stage1Passed=false;stage2Passed=false;stage3Passed=false;stage4Passed=false;portIntroSeen=false;farmIntroSeen=false;player.x=150;
  objective.textContent=scenes[0].objective;prompt.classList.add('hidden');
   preloadScene(0);preloadScene(1);
  if(!started){started=true;last=performance.now();requestAnimationFrame(frame);}
@@ -318,6 +321,73 @@ function handleStageQuizAnswer(selected,items,letters,hint){
  quizNextBtn.classList.remove('hidden');
 }
 
+
+// ===== ด่านที่ ๔ : ท่ารับสินค้าจากหัวเมือง — นายท่า =====
+function portOfficerLine(text,emotion='normal'){return {who:'portOfficer',emotion,text};}
+function portDialogueLines(){
+ return [
+  student('เมื่อกี้แม่ค้าบอกให้ลองเดินมาทางนี้นี่นา... โอ้โห! มีเรือเต็มไปหมดเลย แถมยังมีคนกำลังขนสินค้าอยู่ด้วย ที่นี่คือที่ไหนกันนะ?','curious'),
+  portOfficerLine('เฮ้! เจ้าน่ะ! หยุดก่อน! จะไปแห่งใดกัน? มีสินค้ามาขาย หรือคิดจะมาซื้อของอย่างนั้นรึ?','point'),
+  student(()=>genderWord('อ๊ะ! ผมเหรอครับ? ผมไม่ได้เอาของมาขายครับ แค่อยากเดินเข้าไปดูข้างในเท่านั้นเอง','อ๊ะ! หนูเหรอคะ? หนูไม่ได้เอาของมาขายค่ะ แค่อยากเดินเข้าไปดูข้างในเท่านั้นเอง'),'surprised'),
+  portOfficerLine('อย่างนั้นรึ? ที่นี่มิใช่ที่ให้เดินเข้าออกตามใจนะเจ้า ข้ากำลังดูแลการขนถ่ายสินค้าจากหัวเมืองอยู่ ผู้ใดจะผ่านไปก็ควรแจ้งให้ข้าทราบก่อน','normal'),
+  student(()=>genderWord('ขอโทษครับ แล้วคุณลุงเป็นใครหรือครับ? ทำไมถึงต้องตรวจสินค้าที่นี่ด้วย?','ขอโทษค่ะ แล้วคุณลุงเป็นใครหรือคะ? ทำไมถึงต้องตรวจสินค้าที่นี่ด้วย?'),'curious'),
+  portOfficerLine('ข้าเป็นเจ้าพนักงานประจำท่ารับสินค้า มีหน้าที่ดูแลความเรียบร้อยและจดบันทึกสินค้าที่เรือนำเข้ามา เจ้าลองมองดูรอบ ๆ สิ มีเรือเข้ามาเทียบท่าไม่ขาดสายเลย','explain'),
+  student(()=>genderWord('แล้วสินค้าที่อยู่บนเรือเหล่านั้นมาจากไหนกันครับ?','แล้วสินค้าที่อยู่บนเรือเหล่านั้นมาจากไหนกันคะ?'),'curious'),
+  portOfficerLine('มาจากหัวเมืองต่าง ๆ นั่นเอง หัวเมืองก็คือเมืองที่อยู่ในเขตการปกครองหรือมีความสัมพันธ์กับกรุงศรีอยุธยา แต่ละแห่งมีสินค้าของตนเอง แล้วส่งมาค้าขายยังพระนคร','explain'),
+  student(()=>genderWord('แล้วมีสินค้าอะไรบ้างครับ? ผมเห็นทั้งกระสอบ ตะกร้าผลไม้ แล้วก็ลังไม้เต็มไปหมดเลย','แล้วมีสินค้าอะไรบ้างคะ? หนูเห็นทั้งกระสอบ ตะกร้าผลไม้ แล้วก็ลังไม้เต็มไปหมดเลย'),'curious'),
+  portOfficerLine('มีทั้งข้าว ผลไม้ ปลาแห้ง ไม้ และของป่าหลายชนิด บางอย่างนำไปขายในตลาด บางอย่างก็ส่งต่อให้ผู้ที่ต้องการใช้ประโยชน์','point'),
+  student(()=>genderWord('แล้วทำไมถึงใช้เรือขนสินค้ากันเยอะจังครับ? ไม่ใช้เกวียนขนมาทั้งหมดเหรอครับ?','แล้วทำไมถึงใช้เรือขนสินค้ากันเยอะจังคะ? ไม่ใช้เกวียนขนมาทั้งหมดเหรอคะ?'),'curious'),
+  portOfficerLine('อยุธยามีแม่น้ำลำคลองเชื่อมต่อกันหลายสาย เรือจึงบรรทุกสินค้าได้มากและเดินทางได้สะดวก ส่วนเกวียนก็ยังใช้ขนส่งทางบกอยู่เช่นกัน','explain'),
+  student('เข้าใจแล้ว! ที่นี่ก็เหมือนจุดรับสินค้าจากเมืองต่าง ๆ ก่อนส่งต่อไปขายหรือใช้งานในพระนครสินะ','normal'),
+  portOfficerLine('ถูกต้อง! เจ้าช่างเข้าใจได้รวดเร็ว ท่ารับสินค้าแห่งนี้ช่วยให้สินค้าเดินทางมาถึงผู้คนในกรุงศรีอยุธยา และทำให้การค้าขายคึกคักยิ่งขึ้น','smile'),
+  student(()=>genderWord('คุณลุงครับ แล้วถ้าผมอยากไปดูสินค้าจากต่างประเทศบ้าง ต้องไปทางไหนครับ?','คุณลุงคะ แล้วถ้าหนูอยากไปดูสินค้าจากต่างประเทศบ้าง ต้องไปทางไหนคะ?'),'curious'),
+  portOfficerLine('อ้อ! เจ้าอยากไปย่านการค้าต่างชาติอย่างนั้นรึ? ที่นั่นมีพ่อค้าจากแดนไกลเข้ามาค้าขายอยู่มาก ทั้งชาวจีนและชาวตะวันตก','point'),
+  student('จริงเหรอ! อยากเห็นจังเลยว่าพวกเขานำสินค้าอะไรมาขายกันบ้าง!','surprised'),
+  portOfficerLine('ใจเย็นก่อนเจ้า! ก่อนจะเดินทางต่อ ข้าอยากรู้ว่าเจ้าเข้าใจเรื่องท่ารับสินค้าแห่งนี้ดีเพียงใด','normal'),
+  student(()=>genderWord('หมายความว่าผมต้องตอบคำถามก่อนใช่ไหมครับ?','หมายความว่าหนูต้องตอบคำถามก่อนใช่ไหมคะ?'),'curious'),
+  portOfficerLine('ถูกแล้ว! หากเจ้าตอบคำถามของข้าครบทั้งห้าข้อ ข้าจะอนุญาตให้เจ้าเดินทางต่อไปยังย่านการค้าต่างชาติ!','smile'),
+  student('ตกลง! พร้อมแล้ว!','normal')
+ ];
+}
+const portQuiz=[
+ {q:'นายท่ารับสินค้ามีหน้าที่สำคัญอย่างไร?',options:['ดูแลความเรียบร้อยและจดบันทึกสินค้าที่เข้ามา','ขายสินค้าให้ชาวต่างชาติเพียงอย่างเดียว','ควบคุมการเพาะปลูกของชาวนา','สร้างเรือสำหรับเดินทางไปต่างประเทศ'],answer:0,explain:'นายท่าดูแลความเรียบร้อยและจดบันทึกสินค้าที่เรือขนเข้ามา',hint:'ลองนึกถึงตอนที่นายท่าแนะนำหน้าที่ของตนเอง'},
+ {q:'สินค้าที่นำเข้ามายังท่ารับสินค้าส่วนหนึ่งมาจากที่ใด?',options:['พระราชวังเพียงแห่งเดียว','หัวเมืองต่าง ๆ ที่ติดต่อกับกรุงศรีอยุธยา','ย่านการค้าต่างชาติเท่านั้น','เรือจากต่างประเทศทั้งหมด'],answer:1,explain:'สินค้าจากหัวเมืองต่าง ๆ ถูกส่งมาค้าขายในพระนคร',hint:'นายท่าอธิบายถึงเมืองต่าง ๆ ที่ส่งสินค้ามาค้าขายในพระนคร'},
+ {q:'ข้อใดเป็นกลุ่มสินค้าที่นายท่ากล่าวถึงในบทสนทนา?',options:['รถยนต์ เครื่องบิน และโทรศัพท์','ทองคำเพียงชนิดเดียว','ข้าว ผลไม้ ปลาแห้ง ไม้ และของป่า','เครื่องใช้ไฟฟ้าและเครื่องจักร'],answer:2,explain:'นายท่ากล่าวถึงข้าว ผลไม้ ปลาแห้ง ไม้ และของป่าหลายชนิด',hint:'ลองนึกถึงสิ่งของที่วางอยู่ตามท่าน้ำและบนเรือ'},
+ {q:'เหตุใดเรือจึงเป็นพาหนะสำคัญในการขนส่งสินค้าในสมัยอยุธยา?',options:['เพราะไม่สามารถใช้เกวียนได้เลย','เพราะทุกหัวเมืองตั้งอยู่กลางทะเล','เพราะเรือใช้เดินทางบนบกได้','เพราะมีแม่น้ำลำคลองเชื่อมต่อกัน และเรือบรรทุกสินค้าได้มาก'],answer:3,explain:'แม่น้ำลำคลองช่วยให้เรือขนส่งสินค้าปริมาณมากได้สะดวก',hint:'นายท่าพูดถึงแม่น้ำลำคลองและความสามารถในการบรรทุกของของเรือ'},
+ {q:'ท่ารับสินค้าจากหัวเมืองมีความสำคัญต่อเศรษฐกิจของกรุงศรีอยุธยาอย่างไร?',options:['ทำให้สินค้าจากหลายพื้นที่เข้าสู่พระนครและส่งต่อไปค้าขายได้','ทำให้ทุกหัวเมืองเลิกค้าขายกัน','ทำให้ประชาชนไม่ต้องใช้สินค้าอีกต่อไป','ทำให้การขนส่งทางน้ำหยุดลง'],answer:0,explain:'ท่าน้ำช่วยรับและส่งต่อสินค้าจากหลายพื้นที่เพื่อให้ผู้คนในพระนครซื้อขายและใช้ประโยชน์',hint:'ลองคิดว่าสินค้าจากหัวเมืองเดินทางผ่านท่าน้ำไปถึงผู้ซื้อได้อย่างไร'}
+];
+function openPortQuiz(){
+ quizIndex=0;quizScore=0;quizShowingResult=false;quizRetrying=false;quizActive=true;
+ quizPanel.classList.remove('hidden');renderPortQuizQuestion();
+}
+function renderPortQuizQuestion(){
+ const item=portQuiz[quizIndex];
+ quizHeading.textContent='ด่านที่ ๔ : ท่ารับสินค้าจากหัวเมือง';
+ quizProgress.textContent='ข้อ '+(quizIndex+1)+' / '+portQuiz.length;
+ quizQuestion.textContent=item.q;quizAnswers.replaceChildren();quizFeedback.textContent='';
+ quizNextBtn.classList.add('hidden');
+ item.options.forEach((option,index)=>{
+  const button=document.createElement('button');
+  button.type='button';button.className='quiz-answer';button.textContent=['ก','ข','ค','ง'][index]+'. '+option;
+  button.addEventListener('click',()=>selectPortQuizAnswer(index));
+  quizAnswers.append(button);
+ });
+}
+function selectPortQuizAnswer(selected){
+ const item=portQuiz[quizIndex];
+ handleStageQuizAnswer(selected,portQuiz,['ก','ข','ค','ง'],'คำตอบยังไม่ถูกต้องนะ คำใบ้: '+item.hint+' ลองเลือกอีกครั้ง');
+}
+function finishPortQuiz(){
+ quizShowingResult=true;stage4Passed=true;
+ quizHeading.textContent='สรุปผลด่านที่ ๔';
+ quizProgress.textContent='คะแนน '+quizScore+' / '+portQuiz.length;
+ quizQuestion.textContent='ตอบถูกครบทั้ง ๕ ข้อ! ผ่านด่านท่ารับสินค้าจากหัวเมือง';
+ quizAnswers.replaceChildren();
+ quizFeedback.textContent='นายท่าอนุญาตให้เดินทางต่อไปยังย่านการค้าต่างชาติแล้ว (ด่านที่ ๕ จะเปิดเมื่อเตรียมฉากเสร็จ)';
+ quizNextBtn.textContent='กลับไปสำรวจท่าเรือ ▶';
+ quizNextBtn.classList.remove('hidden');
+}
+
 // ===== แบบทดสอบด่านที่ ๓: ตลาดในกรุงศรีอยุธยา =====
 const marketQuiz=[
  {q:'ตลาดน้อยเป็นสถานที่สำหรับทำอะไร?',options:['เป็นสถานที่ฝึกทหาร','เป็นสถานที่ซื้อขายและแลกเปลี่ยนสินค้า','เป็นสถานที่ประกอบพิธีกรรม'],answer:1,explain:'ตลาดเป็นแหล่งที่ผู้คนนำสินค้ามาซื้อขายและแลกเปลี่ยนกัน'},
@@ -443,6 +513,17 @@ function finishFarmerQuiz(){
  quizNextBtn.classList.remove('hidden');
 }
 quizNextBtn.addEventListener('click',()=>{
+ const isPortQuiz=quizHeading.textContent.includes('ด่านที่ ๔')||quizHeading.textContent.includes('สรุปผลด่านที่ ๔');
+ if(isPortQuiz){
+  if(quizShowingResult){
+   quizPanel.classList.add('hidden');quizActive=false;
+   objective.textContent='ผ่านด่านที่ ๔ แล้ว! ปลดล็อกย่านการค้าต่างชาติ (รอเตรียมฉากด่านที่ ๕)';
+   return;
+  }
+  if(quizIndex<portQuiz.length-1){quizIndex++;renderPortQuizQuestion();}
+  else finishPortQuiz();
+  return;
+ }
  const isMarketQuiz=quizHeading.textContent.includes('ด่านที่ ๓')||quizHeading.textContent.includes('สรุปผลด่านที่ ๓');
  if(isMarketQuiz){
   if(quizShowingResult){
@@ -483,6 +564,12 @@ function interact(){
  if(quizActive)return;
  if(dialogue){advanceDialogue();return;}
  const s=scenes[sceneIndex].id;
+ if(s==='port'&&Math.abs(player.x-portOfficer.x)<390){
+  portIntroSeen=true;
+  if(stage4Passed)openDialogue(portDialogueLines());
+  else openDialogue(portDialogueLines(),openPortQuiz);
+  return;
+ }
  if(s==='boat'){
   // เปิดบทสนทนาฉบับเต็มซ้ำได้ทุกครั้งที่กลับมาสำรวจ แต่ไม่เปิดแบบทดสอบซ้ำเมื่อผ่านแล้ว
   openDialogue(boatJourneyLines());
@@ -536,6 +623,12 @@ function update(dt){
  player.moving=dir!==0;
  if(dir){player.facing=dir;player.x=Math.max(45,Math.min(worldWidth-80,player.x+dir*player.speed*dt));}
  const id=scenes[sceneIndex].id;
+ // นายท่าตะโกนเรียกครั้งแรกเมื่อนักเรียนเดินเข้ามาใกล้ท่ารับสินค้า
+ if(id==='port'&&!portIntroSeen&&player.x>=745){
+  portIntroSeen=true;
+  openDialogue(portDialogueLines(),openPortQuiz);
+  return;
+ }
  // เดินข้ามขอบฉากได้ทั้งสองทิศทาง เพื่อกลับไปสำรวจพื้นที่เดิม
  if(player.x>worldWidth-145&&(
   (sceneIndex<3&&(id==='school'||id==='road'||(id==='coin'&&coinFound)))||
@@ -553,6 +646,7 @@ function update(dt){
  if(id==='farm'&&Math.abs(player.x-farmer.x)<260)message=stage1Passed?'กด E เพื่อสนทนาและทบทวนกับชาวนา':'กด E เพื่อคุยกับชาวนา';
  if(id==='boat')message='กด E เพื่อฟังเรื่องราวระหว่างเดินทางอีกครั้ง';
  if(id==='market'&&Math.abs(player.x-merchant.x)<270)message='กด E เพื่อพูดคุยกับแม่ค้า';
+ if(id==='port'&&Math.abs(player.x-portOfficer.x)<390)message=stage4Passed?'กด E เพื่อทบทวนบทสนทนากับนายท่า':'กด E เพื่อพูดคุยกับนายท่า';
  prompt.textContent=message;prompt.classList.toggle('hidden',!message);
 }
 function drawBackground(){
