@@ -115,6 +115,8 @@ function showDialogueLine(){
  dialogueBox.classList.toggle('market-merchant',sceneIndex===5&&d.who==='merchant');
  dialogueBox.classList.toggle('port-student',sceneIndex===6&&d.who==='student');
  dialogueBox.classList.toggle('port-officer',sceneIndex===6&&d.who==='portOfficer');
+ // Port officer point artwork is already facing left; other expressions need mirroring.
+ dialogueBox.classList.toggle('port-officer-point',sceneIndex===6&&d.who==='portOfficer'&&d.emotion==='point');
  speaker.textContent=d.who==='farmer'?'ชาวนา':d.who==='boatman'?'คนพายเรือ':d.who==='merchant'?'แม่ค้า':d.who==='portOfficer'?'นายท่ารับสินค้า':playerName;
  dialogueText.textContent=typeof d.text==='function'?d.text():d.text;
  portrait.classList.remove('hidden');
