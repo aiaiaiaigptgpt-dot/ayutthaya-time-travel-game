@@ -99,6 +99,7 @@ const dialogueContent=nextBtn.parentNode;
 dialogueContent.insertBefore(dialogueNav,nextBtn);
 dialogueNav.append(previousBtn,nextBtn);
 
+let portraitRequestId=0;
 function showDialogueLine(){
  const d=dialogue[dialogueIndex];
  dialogueBox.classList.toggle('farmer-speaking',d.who==='farmer');
@@ -117,9 +118,21 @@ function showDialogueLine(){
  else if(d.who==='merchant')portraitPath='merchant-'+d.emotion+'.png';
  else portraitPath='student-'+selectedGender+'-'+d.emotion+'.png';
  const portraitAsset=image(portraitPath);
- // Only load portrait for the spoken line, not every NPC expression at game start.
- if(portrait.src!==portraitAsset.src)portrait.src=portraitAsset.src;
+ // Do not display the previous speaker while a new portrait is downloading.
+ // Each line keeps its own request ID so late network responses cannot overwrite it.
+ const portraitRequest=++portraitRequestId;
+ portrait.style.visibility='hidden';
+ portrait.removeAttribute('src');
  portrait.alt=speaker.textContent;
+ const applyPortrait=()=>{
+  if(portraitRequest!==portraitRequestId||!dialogue||dialogue[dialogueIndex]!==d)return;
+  if(portraitAsset.naturalWidth){portrait.src=portraitAsset.src;portrait.style.visibility='visible';}
+ };
+ if(portraitAsset.complete)applyPortrait();
+ else {
+  portraitAsset.addEventListener('load',applyPortrait,{once:true});
+  portraitAsset.addEventListener('error',()=>{if(portraitRequest===portraitRequestId)portrait.alt='ไม่สามารถโหลดภาพผู้พูด';},{once:true});
+ }
  previousBtn.disabled=dialogueIndex===0;
  previousBtn.classList.toggle('hidden',dialogueIndex===0);
  nextBtn.textContent=dialogueIndex===dialogue.length-1?'ปิดบทสนทนา ▶':'ถัดไป ▶';
