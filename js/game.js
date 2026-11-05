@@ -619,7 +619,7 @@ function draw(){
    if(Math.abs(player.x-merchant.x)<220){ctx.font='bold 21px system-ui';ctx.fillStyle='#fff6db';ctx.textAlign='center';ctx.fillText('แม่ค้า',merchant.x,ground-h-9);}
   }
  }
- const img=image('student-'+(selectedGender||'boy')+'-walk.png');
+ const img=image('student-'+(selectedGender||'boy')+'-walk.webp');
  // Standing uses a near-neutral passing pose; moving cycles through all six frames.
  const index=player.moving?Math.floor(animationTime*8)%6:2;
  drawWalkSprite(img,index,player.x,ground,player.w,player.h,player.facing);
