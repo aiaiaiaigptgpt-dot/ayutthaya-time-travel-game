@@ -16,7 +16,7 @@ const player={x:150,w:150,h:270,speed:320,facing:1,moving:false};
 const farmer={x:1000,w:168,h:247};
 const merchant={x:1040,w:190,h:270};
 // Stage 4: student enters at the left marker; the port officer stands at the right marker.
-const portOfficer={x:1120,w:165,h:265};
+const portOfficer={x:1120,w:220,h:340};
 const images={};
 function image(path){if(!images[path]){const img=new Image();img.decoding='async';img.loading='eager';img.src=path;images[path]=img;}return images[path];}
 // เตรียมภาพฉากถัดไปล่วงหน้า เพื่อลดเวลารอเมื่อผู้เล่นเดินทางเปลี่ยนด่าน
