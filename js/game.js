@@ -15,8 +15,8 @@ const worldWidth=1280;
 const player={x:150,w:150,h:270,speed:320,facing:1,moving:false};
 const farmer={x:1000,w:168,h:247};
 const merchant={x:1040,w:190,h:270};
-// Stage 4: officer left, student arrives on right.
-const portOfficer={x:265,w:165,h:265};
+// Stage 4: student enters at the left marker; the port officer stands at the right marker.
+const portOfficer={x:1120,w:165,h:265};
 const images={};
 function image(path){if(!images[path]){const img=new Image();img.decoding='async';img.loading='eager';img.src=path;images[path]=img;}return images[path];}
 // เตรียมภาพฉากถัดไปล่วงหน้า เพื่อลดเวลารอเมื่อผู้เล่นเดินทางเปลี่ยนด่าน
@@ -39,7 +39,7 @@ const scenes=[
  {id:'farm',bg:'stage1-farm.webp',objective:'นี่คือที่ไหนกันนะ? เดินไปถามชาวนาดูสิ'},
  {id:'boat',bg:null,objective:'ด่านที่ ๒ : การเดินทางทางเรือเข้าสู่พระนคร'},
  {id:'market',bg:'marketplace-bg.jpg',objective:'ด่านที่ ๓ : สำรวจตลาดในกรุงศรีอยุธยา'},
- {id:'port',bg:'stage4-port.webp',objective:'ด่านที่ ๔ : เดินไปทางซ้ายเพื่อสำรวจท่ารับสินค้าจากหัวเมือง'}
+ {id:'port',bg:'stage4-port.webp',objective:'ด่านที่ ๔ : เดินไปทางขวาเพื่อสำรวจท่ารับสินค้าจากหัวเมือง'}
 ];
 // Display a clear loading state while the current scene's actual image is downloading.
 let loadingRequest=0;
@@ -173,8 +173,8 @@ function startGame(){
 }
 function goToScene(n,direction='forward'){
  sceneIndex=n;
- player.x=n===6?worldWidth-170:(direction==='backward'?worldWidth-145:130);
- player.facing=n===6?-1:direction==='backward'?-1:1;
+ player.x=n===6?155:(direction==='backward'?worldWidth-145:130);
+ player.facing=n===6?1:direction==='backward'?-1:1;
  player.moving=false;
  if(n===4)scenes[n].bg=selectedGender==='girl'?'boat-ride-girl.webp':'boat-ride-boy.webp';
  preloadScene(n);preloadScene(n+1);
@@ -607,7 +607,9 @@ function draw(){
   const officerImg=image('port-officer-idle.webp');
   if(officerImg.complete&&officerImg.naturalWidth){
    const w=portOfficer.w,h=portOfficer.h;
-   ctx.drawImage(officerImg,Math.round(portOfficer.x-w/2),Math.round(ground-h),w,h);
+   // This sprite faces right in the source; mirror it to look toward the student on the left.
+   ctx.save();ctx.translate(Math.round(portOfficer.x),0);ctx.scale(-1,1);
+   ctx.drawImage(officerImg,-w/2,Math.round(ground-h),w,h);ctx.restore();
    if(Math.abs(player.x-portOfficer.x)<225){
     ctx.font='bold 19px system-ui';ctx.fillStyle='#fff6db';ctx.textAlign='center';
     ctx.fillText('เจ้าพนักงานท่ารับสินค้า',portOfficer.x,ground-h-10);
