@@ -117,3 +117,16 @@ button:disabled{opacity:.55;cursor:not-allowed}
 #dialogue-box.checkpoint-student{flex-direction:row!important}#dialogue-box.checkpoint-student #dialogue-portrait{order:0;transform:none!important}#dialogue-box.checkpoint-student .dialogue-content{order:1;padding:12px 18px 8px 4px}
 #dialogue-box.checkpoint-officer{flex-direction:row-reverse!important}#dialogue-box.checkpoint-officer #dialogue-portrait{order:0;transform:none!important}#dialogue-box.checkpoint-officer .dialogue-content{order:1;padding:12px 4px 8px 18px}
 @media(max-width:650px){#dialogue-box.checkpoint-student .dialogue-content{padding:5px 8px 3px 0}#dialogue-box.checkpoint-officer .dialogue-content{padding:5px 0 3px 8px}}
+
+/* Stage 8 dialogue: student on the left, treasury official on the right.
+   Treasury portrait artwork already faces left; do not mirror it. */
+#dialogue-box.treasury-student{flex-direction:row!important}
+#dialogue-box.treasury-student #dialogue-portrait{order:0;transform:none!important}
+#dialogue-box.treasury-student .dialogue-content{order:1;padding:12px 18px 8px 4px}
+#dialogue-box.treasury-officer{flex-direction:row-reverse!important}
+#dialogue-box.treasury-officer #dialogue-portrait{order:0;transform:none!important}
+#dialogue-box.treasury-officer .dialogue-content{order:1;padding:12px 4px 8px 18px}
+@media(max-width:650px){
+ #dialogue-box.treasury-student .dialogue-content{padding:5px 8px 3px 0}
+ #dialogue-box.treasury-officer .dialogue-content{padding:5px 0 3px 8px}
+}

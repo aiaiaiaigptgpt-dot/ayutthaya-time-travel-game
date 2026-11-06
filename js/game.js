@@ -10,7 +10,7 @@ const quizQuestion=$('quiz-question'),quizAnswers=$('quiz-answers'),quizFeedback
 const quizNextBtn=$('quiz-next-btn');
 const keys={left:false,right:false};
 let selectedGender=null,playerName='นักเดินทาง',sceneIndex=0,dialogue=null,dialogueIndex=0,dialogueDone=null;
-let started=false,last=0,animationTime=0,coinFound=false,farmerTalked=false,quizActive=false,quizIndex=0,quizScore=0,quizShowingResult=false,quizRetrying=false,stage1Passed=false,farmIntroSeen=false,stage3Passed=false,stage4Passed=false,portIntroSeen=false,stage5Passed=false,stage6Passed=false,stage7Passed=false;
+let started=false,last=0,animationTime=0,coinFound=false,farmerTalked=false,quizActive=false,quizIndex=0,quizScore=0,quizShowingResult=false,quizRetrying=false,stage1Passed=false,farmIntroSeen=false,stage3Passed=false,stage4Passed=false,portIntroSeen=false,stage5Passed=false,stage6Passed=false,stage7Passed=false,stage8Passed=false;
 const worldWidth=1280;
 const player={x:150,w:150,h:270,speed:320,facing:1,moving:false};
 const farmer={x:1000,w:225,h:330};
@@ -20,6 +20,8 @@ const portOfficer={x:1120,w:220,h:340};
 const chineseMerchant={x:1035,w:250,h:365};
 const foreignExplorer={x:1035,w:250,h:365};
 const checkpointOfficer={x:1035,w:260,h:390};
+// Stage 8: treasury official stands to the right and faces the arriving student.
+const treasuryOfficer={x:1040,w:255,h:390};
 const images={};
 function image(path){if(!images[path]){const img=new Image();img.decoding='async';img.loading='eager';img.src=path;images[path]=img;}return images[path];}
 // เตรียมภาพฉากถัดไปล่วงหน้า เพื่อลดเวลารอเมื่อผู้เล่นเดินทางเปลี่ยนด่าน
@@ -35,6 +37,7 @@ function preloadDialoguePortraits(){
  files.push('chinese_merchant_happy.png','chinese_merchant_explain.png','chinese_merchant_point_left.png','chinese_merchant_surprised.png','chinese_merchant_present_gold.png');
  files.push('foreign_explorer_friendly.png','foreign_explorer_explaining.png','foreign_explorer_pointing.png','foreign_explorer_surprised.png','foreign_explorer_laughing..png','foreign_explorer_welcoming.png');
  files.push('npc_checkpoint_inspect_document.png','npc_checkpoint_point_left.png','npc_checkpoint_celebrate.png','npc_checkpoint_show_emblem.png','npc_checkpoint_fullbody.png','npc_checkpoint_stop.png','npc_checkpoint_neutral.png');
+ files.push('npc_treasury_idle.png','npc_treasury_wave.png','npc_treasury_present.png','npc_treasury_show_records.png','npc_treasury_point.png','npc_treasury_thinking.png','npc_treasury_full.png');
  files.forEach(path=>{const img=image(path);if(typeof img.decode==='function')img.decode().catch(()=>{});});
 }
 // ภาพตัวละครและฉากอื่น ๆ จะถูกโหลดเมื่อจำเป็น
@@ -48,7 +51,8 @@ const scenes=[
  {id:'port',bg:'stage4-port.webp',objective:'ด่านที่ ๔ : เดินไปทางขวาเพื่อสำรวจท่ารับสินค้าจากหัวเมือง'},
  {id:'foreignTrade',bg:'foreign_trade_district_bg.png',objective:'ด่านที่ ๕ : เดินไปพูดคุยกับพ่อค้าชาวจีนในย่านการค้าต่างชาติ'},
  {id:'internationalPort',bg:'international_trade_port.png',objective:'ด่านที่ ๖ : เดินไปพูดคุยกับกัปตันฌองที่ท่าเรือการค้าต่างประเทศ'},
- {id:'checkpoint',bg:'checkpoint_gate.png',objective:'ด่านที่ ๗ : เดินไปพูดคุยกับเจ้าหน้าที่ประจำด่านขนอน'}
+ {id:'checkpoint',bg:'checkpoint_gate.png',objective:'ด่านที่ ๗ : เดินไปพูดคุยกับเจ้าหน้าที่ประจำด่านขนอน'},
+ {id:'treasury',bg:'scene_treasury.png',objective:'ด่านที่ ๘ : เดินไปพูดคุยกับเจ้าพนักงานพระคลังสินค้า'}
 ];
 // Display a clear loading state while the current scene's actual image is downloading.
 let loadingRequest=0;
@@ -132,7 +136,9 @@ function showDialogueLine(){
  dialogueBox.classList.toggle('explorer-speaking',sceneIndex===8&&d.who==='foreignExplorer');
  dialogueBox.classList.toggle('checkpoint-student',sceneIndex===9&&d.who==='student');
  dialogueBox.classList.toggle('checkpoint-officer',sceneIndex===9&&d.who==='checkpointOfficer');
- speaker.textContent=d.who==='farmer'?'ชาวนา':d.who==='boatman'?'คนพายเรือ':d.who==='merchant'?'แม่ค้า':d.who==='portOfficer'?'นายท่ารับสินค้า':d.who==='chineseMerchant'?'พ่อค้าชาวจีน':d.who==='foreignExplorer'?'กัปตันฌอง':d.who==='checkpointOfficer'?'เจ้าหน้าที่ด่านขนอน':playerName;
+ dialogueBox.classList.toggle('treasury-student',sceneIndex===10&&d.who==='student');
+ dialogueBox.classList.toggle('treasury-officer',sceneIndex===10&&d.who==='treasuryOfficer');
+ speaker.textContent=d.who==='farmer'?'ชาวนา':d.who==='boatman'?'คนพายเรือ':d.who==='merchant'?'แม่ค้า':d.who==='portOfficer'?'นายท่ารับสินค้า':d.who==='chineseMerchant'?'พ่อค้าชาวจีน':d.who==='foreignExplorer'?'กัปตันฌอง':d.who==='checkpointOfficer'?'เจ้าหน้าที่ด่านขนอน':d.who==='treasuryOfficer'?'เจ้าพนักงานพระคลังสินค้า':playerName;
  dialogueText.textContent=typeof d.text==='function'?d.text():d.text;
  portrait.classList.remove('hidden');
  let portraitPath;
@@ -143,6 +149,7 @@ function showDialogueLine(){
   else if(d.who==='chineseMerchant')portraitPath=({normal:'chinese_merchant_happy.png',smile:'chinese_merchant_happy.png',explain:'chinese_merchant_explain.png',point:'chinese_merchant_point_left.png',surprised:'chinese_merchant_surprised.png',proud:'chinese_merchant_present_gold.png'})[d.emotion]||'chinese_merchant_happy.png';
  else if(d.who==='foreignExplorer')portraitPath=({normal:'foreign_explorer_friendly.png',smile:'foreign_explorer_welcoming.png',explain:'foreign_explorer_explaining.png',point:'foreign_explorer_pointing.png',surprised:'foreign_explorer_surprised.png',laugh:'foreign_explorer_laughing..png',proud:'foreign_explorer_welcoming.png'})[d.emotion]||'foreign_explorer_friendly.png';
  else if(d.who==='checkpointOfficer')portraitPath=({normal:'npc_checkpoint_neutral.png',stop:'npc_checkpoint_stop.png',proud:'npc_checkpoint_show_emblem.png',explain:'npc_checkpoint_inspect_document.png',inspect:'npc_checkpoint_inspect_document.png',point:'npc_checkpoint_point_left.png',celebrate:'npc_checkpoint_celebrate.png'})[d.emotion]||'npc_checkpoint_neutral.png';
+ else if(d.who==='treasuryOfficer')portraitPath=({normal:'npc_treasury_idle.png',wave:'npc_treasury_wave.png',proud:'npc_treasury_present.png',present:'npc_treasury_present.png',records:'npc_treasury_show_records.png',explain:'npc_treasury_show_records.png',point:'npc_treasury_point.png',thinking:'npc_treasury_thinking.png'})[d.emotion]||'npc_treasury_idle.png';
  else portraitPath='student-'+selectedGender+'-'+d.emotion+'.webp';
  const portraitAsset=image(portraitPath);
  // Do not display the previous speaker while a new portrait is downloading.
@@ -185,7 +192,7 @@ function advanceDialogue(){
 previousBtn.addEventListener('click',goBackDialogue);
 nextBtn.addEventListener('click',advanceDialogue);
 function startGame(){
- showScreen('game-screen');sceneIndex=0;coinFound=false;farmerTalked=false;quizActive=false;quizShowingResult=false;quizRetrying=false;stage1Passed=false;stage2Passed=false;stage3Passed=false;stage4Passed=false;portIntroSeen=false;stage5Passed=false;stage6Passed=false;stage7Passed=false;farmIntroSeen=false;player.x=150;
+ showScreen('game-screen');sceneIndex=0;coinFound=false;farmerTalked=false;quizActive=false;quizShowingResult=false;quizRetrying=false;stage1Passed=false;stage2Passed=false;stage3Passed=false;stage4Passed=false;portIntroSeen=false;stage5Passed=false;stage6Passed=false;stage7Passed=false;stage8Passed=false;farmIntroSeen=false;player.x=150;
  objective.textContent=scenes[0].objective;prompt.classList.add('hidden');
   preloadScene(0);preloadScene(1);
  if(!started){started=true;last=performance.now();requestAnimationFrame(frame);}
@@ -467,6 +474,7 @@ function finishInternationalPortQuiz(){quizShowingResult=true;stage6Passed=true;
 
 
 function checkpointOfficerLine(text,emotion='normal'){return {who:'checkpointOfficer',emotion,text};}
+function treasuryOfficerLine(text,emotion='normal'){return {who:'treasuryOfficer',emotion,text};}
 function checkpointDialogueLines(){return [
  checkpointOfficerLine('หยุดก่อน! เจ้าหนูน้อย! จะรีบไปไหนกัน? ที่นี่ไม่ใช่ทางเดินเล่นนะ! ฮ่า ๆ!','stop'),
  student(()=>genderWord('เอ่อ... ผมแค่กำลังเดินทางผ่านไปครับ ที่นี่คือที่ไหนเหรอครับ?','เอ่อ... หนูแค่กำลังเดินทางผ่านไปค่ะ ที่นี่คือที่ไหนเหรอคะ?'),'curious'),
@@ -489,6 +497,33 @@ const checkpointQuiz=[
 function openCheckpointQuiz(){quizIndex=0;quizScore=0;quizShowingResult=false;quizRetrying=false;quizActive=true;quizPanel.classList.remove('hidden');renderCheckpointQuizQuestion();}
 function renderCheckpointQuizQuestion(){const item=checkpointQuiz[quizIndex];quizHeading.textContent='ด่านที่ ๗ : ด่านขนอน';quizProgress.textContent='ข้อ '+(quizIndex+1)+' / '+checkpointQuiz.length;quizQuestion.textContent=item.q;quizAnswers.replaceChildren();quizFeedback.textContent='';quizNextBtn.classList.add('hidden');item.options.forEach((option,index)=>{const button=document.createElement('button');button.type='button';button.className='quiz-answer';button.textContent=['ก','ข','ค','ง'][index]+'. '+option;button.addEventListener('click',()=>handleStageQuizAnswer(index,checkpointQuiz,['ก','ข','ค','ง'],'ยังไม่ถูกต้องนะ! คำใบ้: '+item.hint+' ลองเลือกใหม่อีกครั้ง'));quizAnswers.append(button);});}
 function finishCheckpointQuiz(){quizShowingResult=true;stage7Passed=true;quizHeading.textContent='สรุปผลด่านที่ ๗';quizProgress.textContent='คะแนน '+quizScore+' / '+checkpointQuiz.length;quizQuestion.textContent='ยอดเยี่ยม! ผ่านด่านขนอนแล้ว';quizAnswers.replaceChildren();quizFeedback.textContent='เจ้าได้เรียนรู้เรื่องจังกอบ วิธีการจัดเก็บ และหน้าที่ของด่านขนอนแล้ว';quizNextBtn.textContent='จบด่านที่ ๗ ✓';quizNextBtn.classList.remove('hidden');}
+
+
+ // ===== ด่านที่ ๘ : พระคลังสินค้า =====
+function treasuryDialogueLines(){
+ return [
+  student(()=>genderWord('เอ่อ... สวัสดีครับ ที่นี่คือที่ไหนหรือครับ? เห็นมีลังสินค้าและคนกำลังจัดของเต็มไปหมดเลย','เอ่อ... สวัสดีค่ะ ที่นี่คือที่ไหนหรือคะ? เห็นมีลังสินค้าและคนกำลังจัดของเต็มไปหมดเลย'),'curious'),
+  treasuryOfficerLine('โอ้โฮ! ในที่สุดก็มีผู้มาเยือนเสียที! ยินดีต้อนรับสู่พระคลังสินค้า! ที่นี่เป็นสถานที่สำคัญของกรุงศรีอยุธยาเชียวนะ และแน่นอนว่า... ข้าก็เป็นผู้ดูแลงานสำคัญแห่งนี้ด้วย!','wave'),
+  student(()=>genderWord('พระคลังสินค้าคืออะไรหรือครับ? เป็นที่เก็บของของพระมหากษัตริย์อย่างเดียวหรือครับ?','พระคลังสินค้าคืออะไรหรือคะ? เป็นที่เก็บของของพระมหากษัตริย์อย่างเดียวหรือคะ?'),'curious'),
+  treasuryOfficerLine('ฮ่า ๆ! ถามได้ดี! พระคลังสินค้าเป็นสถานที่สำหรับรับ เก็บรักษา และดูแลสินค้าสำคัญของหลวง ทั้งสินค้าที่มาจากหัวเมืองและสินค้าบางชนิดที่มาจากต่างประเทศ ไม่ใช่แค่โกดังเก็บของธรรมดา ๆ หรอกนะ!','present'),
+  student(()=>genderWord('แล้วเจ้าหน้าที่ต้องทำอะไรกับสินค้าที่นำมาเก็บไว้บ้างครับ?','แล้วเจ้าหน้าที่ต้องทำอะไรกับสินค้าที่นำมาเก็บไว้บ้างคะ?'),'curious'),
+  treasuryOfficerLine('งานของพวกเราละเอียดรอบคอบมาก! ต้องตรวจนับสินค้า จดบันทึกว่ามีอะไรเข้ามา จำนวนเท่าใด แล้วจัดเก็บให้เป็นระเบียบ เมื่อมีคำสั่งให้นำสินค้าไปใช้หรือส่งต่อ ก็ต้องตรวจสอบให้ถูกต้องอีกด้วย!','records'),
+  student(()=>genderWord('มีสินค้าอะไรบ้างหรือครับ? ผมเห็นลังกับภาชนะมากมายเลย','มีสินค้าอะไรบ้างหรือคะ? หนูเห็นลังกับภาชนะมากมายเลย'),'curious'),
+  treasuryOfficerLine('มีสินค้าหลายชนิดทีเดียว! เช่น ข้าว ของป่า และผลิตผลจากหัวเมือง ส่วนสินค้าจากต่างแดนก็มีของที่พ่อค้านำเข้ามา เช่น ผ้า เครื่องถ้วย และสิ่งของแปลกใหม่ เจ้าต้องตาโตแน่ถ้าได้เห็นของทั้งหมด!','point'),
+  student(()=>genderWord('แล้วสินค้าที่เก็บไว้มีประโยชน์ต่อกรุงศรีอยุธยาอย่างไรครับ?','แล้วสินค้าที่เก็บไว้มีประโยชน์ต่อกรุงศรีอยุธยาอย่างไรคะ?'),'curious'),
+  treasuryOfficerLine('สำคัญมากสิ! สินค้าเหล่านี้เกี่ยวข้องกับการค้าของหลวงและการดูแลกิจการของบ้านเมือง การจัดเก็บอย่างเป็นระบบช่วยให้รู้ว่ามีสินค้าอะไรอยู่บ้าง และสามารถนำไปใช้หรือจัดการต่อได้เหมาะสม เห็นหรือยังว่างานของข้าสำคัญเพียงใด!','proud'),
+  student(()=>genderWord('อ๋อ! ด่านขนอนตรวจสินค้าและเก็บจังกอบ ส่วนพระคลังสินค้ารับสินค้าไปตรวจนับ บันทึก และเก็บรักษาใช่ไหมครับ?','อ๋อ! ด่านขนอนตรวจสินค้าและเก็บจังกอบ ส่วนพระคลังสินค้ารับสินค้าไปตรวจนับ บันทึก และเก็บรักษาใช่ไหมคะ?'),'surprised'),
+  treasuryOfficerLine('ถูกต้องที่สุด! เจ้าเข้าใจความแตกต่างได้แล้ว! ข้าบอกแล้วอย่างไรเล่าว่างานพระคลังสินค้านั้นสำคัญไม่แพ้ที่ใด! เอาล่ะ ข้าจะถามความรู้สัก ๓ ข้อ หากตอบได้ก็ถือว่าผ่านการเรียนรู้ในพระคลังสินค้า!','proud')
+ ];
+}
+const treasuryQuiz=[
+ {q:'พระคลังสินค้ามีหน้าที่สำคัญอย่างไร?',options:['เป็นสถานที่รับ เก็บรักษา และดูแลสินค้าสำคัญของหลวง','เป็นสถานที่ฝึกทหาร','เป็นตลาดขายอาหารให้ประชาชนเท่านั้น','เป็นด่านเก็บจังกอบจากเรือทุกลำ'],answer:0,explain:'พระคลังสินค้ารับ เก็บรักษา และดูแลสินค้าสำคัญของหลวง',hint:'ลองนึกถึงสิ่งที่เจ้าพนักงานอธิบายเกี่ยวกับหน้าที่ของพระคลังสินค้า'},
+ {q:'เจ้าหน้าที่พระคลังสินค้าต้องทำสิ่งใดกับสินค้าที่รับเข้ามา?',options:['นำไปแจกจ่ายโดยไม่ตรวจสอบ','ตรวจนับ จดบันทึก และจัดเก็บให้เป็นระเบียบ','นำไปขายทั้งหมดทันที','ปล่อยวางไว้โดยไม่ดูแล'],answer:1,explain:'เจ้าหน้าที่ต้องตรวจนับ บันทึกจำนวนและชนิดสินค้า รวมทั้งจัดเก็บอย่างเป็นระบบ',hint:'เจ้าหน้าที่เล่าว่าต้องรู้ว่าสินค้าอะไรเข้ามาและมีจำนวนเท่าใด'},
+ {q:'ข้อใดอธิบายความแตกต่างระหว่างด่านขนอนกับพระคลังสินค้าได้ถูกต้อง?',options:['ทั้งสองแห่งมีหน้าที่เหมือนกันทุกอย่าง','พระคลังสินค้าเก็บจังกอบ ส่วนด่านขนอนเก็บรักษาสินค้า','ด่านขนอนตรวจสินค้าและเก็บจังกอบ ส่วนพระคลังสินค้ารับ ตรวจนับ บันทึก และเก็บรักษาสินค้า','ด่านขนอนเป็นตลาด ส่วนพระคลังสินค้าเป็นท่าเรือ'],answer:2,explain:'ด่านขนอนเกี่ยวข้องกับการตรวจสินค้าผ่านด่านและเก็บจังกอบ ส่วนพระคลังสินค้าดูแลรับ ตรวจนับ บันทึก และเก็บรักษาสินค้า',hint:'ลองเปรียบเทียบหน้าที่ที่เรียนรู้จากด่านที่ ๗ กับด่านนี้'}
+];
+function openTreasuryQuiz(){quizIndex=0;quizScore=0;quizShowingResult=false;quizRetrying=false;quizActive=true;quizPanel.classList.remove('hidden');renderTreasuryQuizQuestion();}
+function renderTreasuryQuizQuestion(){const item=treasuryQuiz[quizIndex];quizHeading.textContent='ด่านที่ ๘ : พระคลังสินค้า';quizProgress.textContent='ข้อ '+(quizIndex+1)+' / '+treasuryQuiz.length;quizQuestion.textContent=item.q;quizAnswers.replaceChildren();quizFeedback.textContent='';quizNextBtn.classList.add('hidden');item.options.forEach((option,index)=>{const button=document.createElement('button');button.type='button';button.className='quiz-answer';button.textContent=['ก','ข','ค','ง'][index]+'. '+option;button.addEventListener('click',()=>handleStageQuizAnswer(index,treasuryQuiz,['ก','ข','ค','ง'],'ยังไม่ถูกต้องนะ! คำใบ้: '+item.hint+' ลองเลือกคำตอบใหม่อีกครั้ง'));quizAnswers.append(button);});}
+function finishTreasuryQuiz(){quizShowingResult=true;stage8Passed=true;quizHeading.textContent='สรุปผลด่านที่ ๘';quizProgress.textContent='คะแนน '+quizScore+' / '+treasuryQuiz.length;quizQuestion.textContent='ยอดเยี่ยม! ผ่านด่านพระคลังสินค้าแล้ว';quizAnswers.replaceChildren();quizFeedback.textContent='เจ้าได้เรียนรู้หน้าที่ของพระคลังสินค้า การตรวจนับและเก็บรักษาสินค้า รวมถึงความสำคัญต่อกิจการค้าของกรุงศรีอยุธยาแล้ว';quizNextBtn.textContent='จบด่านที่ ๘ ✓';quizNextBtn.classList.remove('hidden');}
 
 // ===== แบบทดสอบด่านที่ ๓: ตลาดในกรุงศรีอยุธยา =====
 const marketQuiz=[
@@ -615,6 +650,7 @@ function finishFarmerQuiz(){
  quizNextBtn.classList.remove('hidden');
 }
 quizNextBtn.addEventListener('click',()=>{
+ const isTreasuryQuiz=quizHeading.textContent.includes('ด่านที่ ๘')||quizHeading.textContent.includes('สรุปผลด่านที่ ๘');if(isTreasuryQuiz){if(quizShowingResult){quizPanel.classList.add('hidden');quizActive=false;objective.textContent='ผ่านด่านที่ ๘ แล้ว! สำรวจพระคลังสินค้าได้ตามสบาย';return;}if(quizIndex<treasuryQuiz.length-1){quizIndex++;renderTreasuryQuizQuestion();}else finishTreasuryQuiz();return;}
  const isCheckpointQuiz=quizHeading.textContent.includes('ด่านที่ ๗')||quizHeading.textContent.includes('สรุปผลด่านที่ ๗');if(isCheckpointQuiz){if(quizShowingResult){quizPanel.classList.add('hidden');quizActive=false;objective.textContent='ผ่านด่านที่ ๗ แล้ว! เดินทางต่อไปยังลานเรียนรู้รายได้แผ่นดิน';return;}if(quizIndex<checkpointQuiz.length-1){quizIndex++;renderCheckpointQuizQuestion();}else finishCheckpointQuiz();return;}
  const isInternationalPortQuiz=quizHeading.textContent.includes('ด่านที่ ๖')||quizHeading.textContent.includes('สรุปผลด่านที่ ๖');if(isInternationalPortQuiz){if(quizShowingResult){quizPanel.classList.add('hidden');quizActive=false;objective.textContent='ผ่านด่านที่ ๖ แล้ว! เดินทางต่อไปยังด่านขนอนได้';return;}if(quizIndex<internationalPortQuiz.length-1){quizIndex++;renderInternationalPortQuizQuestion();}else finishInternationalPortQuiz();return;}
  const isForeignTradeQuiz=quizHeading.textContent.includes('ด่านที่ ๕')||quizHeading.textContent.includes('สรุปผลด่านที่ ๕');if(isForeignTradeQuiz){if(quizShowingResult){quizPanel.classList.add('hidden');quizActive=false;objective.textContent='ผ่านด่านที่ ๕ แล้ว! สำรวจย่านการค้าต่างชาติได้ตามสบาย';return;}if(quizIndex<foreignTradeQuiz.length-1){quizIndex++;renderForeignTradeQuizQuestion();}else finishForeignTradeQuiz();return;}
@@ -669,6 +705,7 @@ function interact(){
  if(quizActive)return;
  if(dialogue){advanceDialogue();return;}
  const s=scenes[sceneIndex].id;
+ if(s==='treasury'&&Math.abs(player.x-treasuryOfficer.x)<370){if(stage8Passed)openDialogue(treasuryDialogueLines());else openDialogue(treasuryDialogueLines(),openTreasuryQuiz);return;}
  if(s==='checkpoint'&&Math.abs(player.x-checkpointOfficer.x)<360){if(stage7Passed)openDialogue(checkpointDialogueLines());else openDialogue(checkpointDialogueLines(),openCheckpointQuiz);return;}
   if(s==='internationalPort'&&Math.abs(player.x-foreignExplorer.x)<350){if(stage6Passed)openDialogue(internationalPortDialogueLines());else openDialogue(internationalPortDialogueLines(),openInternationalPortQuiz);return;}
  if(s==='foreignTrade'&&Math.abs(player.x-chineseMerchant.x)<330){if(stage5Passed)openDialogue(foreignTradeDialogueLines());else openDialogue(foreignTradeDialogueLines(),openForeignTradeQuiz);return;}
@@ -738,7 +775,7 @@ function update(dt){
   return;
  }
  // เดินข้ามขอบฉากได้ทั้งสองทิศทาง เพื่อกลับไปสำรวจพื้นที่เดิม
- if(player.x>worldWidth-145&&(
+ if(player.x>worldWidth-145&&sceneIndex<scenes.length-1&&(
   (sceneIndex<3&&(id==='school'||id==='road'||(id==='coin'&&coinFound)))||
   (id==='farm'&&stage1Passed)||
   (id==='boat'&&stage2Passed)||
@@ -746,7 +783,8 @@ function update(dt){
   (id==='port'&&stage4Passed)||
   (id==='foreignTrade'&&stage5Passed)||
   (id==='internationalPort'&&stage6Passed)||
-  (id==='checkpoint'&&stage7Passed)
+  (id==='checkpoint'&&stage7Passed)||
+  (id==='treasury'&&stage8Passed)
  )){
   goToScene(sceneIndex+1,'forward');return;
  }
@@ -762,6 +800,7 @@ function update(dt){
  if(id==='foreignTrade'&&Math.abs(player.x-chineseMerchant.x)<330)message=stage5Passed?'กด E เพื่อทบทวนบทสนทนากับพ่อค้าชาวจีน':'กด E เพื่อพูดคุยกับพ่อค้าชาวจีน';
  if(id==='internationalPort'&&Math.abs(player.x-foreignExplorer.x)<350)message=stage6Passed?'กด E เพื่อทบทวนบทสนทนากับกัปตันฌอง':'กด E เพื่อพูดคุยกับกัปตันฌอง';
  if(id==='checkpoint'&&Math.abs(player.x-checkpointOfficer.x)<360)message=stage7Passed?'กด E เพื่อทบทวนบทสนทนากับเจ้าหน้าที่ด่านขนอน':'กด E เพื่อพูดคุยกับเจ้าหน้าที่ด่านขนอน';
+ if(id==='treasury'&&Math.abs(player.x-treasuryOfficer.x)<370)message=stage8Passed?'กด E เพื่อทบทวนบทสนทนากับเจ้าพนักงานพระคลังสินค้า':'กด E เพื่อพูดคุยกับเจ้าพนักงานพระคลังสินค้า';
  prompt.textContent=message;prompt.classList.toggle('hidden',!message);
 }
 function drawBackground(){
@@ -827,6 +866,14 @@ function draw(){
  }
  if(id==='checkpoint'){
   const img=image('npc_checkpoint_fullbody.png');if(img.complete&&img.naturalWidth){const w=checkpointOfficer.w,h=checkpointOfficer.h;ctx.drawImage(img,Math.round(checkpointOfficer.x-w/2),Math.round(ground-h),w,h);if(Math.abs(player.x-checkpointOfficer.x)<260){ctx.font='bold 20px system-ui';ctx.fillStyle='#fff6db';ctx.textAlign='center';ctx.fillText('เจ้าหน้าที่ด่านขนอน',checkpointOfficer.x,ground-h-9);}}
+ }
+ if(id==='treasury'){
+  const img=image('npc_treasury_full.png');
+  if(img.complete&&img.naturalWidth){
+   const w=treasuryOfficer.w,h=treasuryOfficer.h;
+   ctx.drawImage(img,Math.round(treasuryOfficer.x-w/2),Math.round(ground-h),w,h);
+   if(Math.abs(player.x-treasuryOfficer.x)<270){ctx.font='bold 20px system-ui';ctx.fillStyle='#fff6db';ctx.textAlign='center';ctx.fillText('เจ้าพนักงานพระคลังสินค้า',treasuryOfficer.x,ground-h-9);}
+  }
  }
  if(id==='internationalPort'){
   const img=image('foreign_explorer_full.png');if(img.complete&&img.naturalWidth){const w=foreignExplorer.w,h=foreignExplorer.h;ctx.drawImage(img,Math.round(foreignExplorer.x-w/2),Math.round(ground-h),w,h);if(Math.abs(player.x-foreignExplorer.x)<260){ctx.font='bold 20px system-ui';ctx.fillStyle='#fff6db';ctx.textAlign='center';ctx.fillText('กัปตันฌอง',foreignExplorer.x,ground-h-9);}}
