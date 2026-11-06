@@ -112,3 +112,8 @@ button:disabled{opacity:.55;cursor:not-allowed}
 #dialogue-box.explorer-student{flex-direction:row!important}#dialogue-box.explorer-student #dialogue-portrait{order:0;transform:none!important}#dialogue-box.explorer-student .dialogue-content{order:1;padding:12px 18px 8px 4px}
 #dialogue-box.explorer-speaking{flex-direction:row-reverse!important}#dialogue-box.explorer-speaking #dialogue-portrait{order:0;transform:none!important}#dialogue-box.explorer-speaking .dialogue-content{order:1;padding:12px 4px 8px 18px}
 @media(max-width:650px){#dialogue-box.explorer-student .dialogue-content{padding:5px 8px 3px 0}#dialogue-box.explorer-speaking .dialogue-content{padding:5px 0 3px 8px}}
+
+/* Stage 7 dialogue: student on left, checkpoint officer on right. */
+#dialogue-box.checkpoint-student{flex-direction:row!important}#dialogue-box.checkpoint-student #dialogue-portrait{order:0;transform:none!important}#dialogue-box.checkpoint-student .dialogue-content{order:1;padding:12px 18px 8px 4px}
+#dialogue-box.checkpoint-officer{flex-direction:row-reverse!important}#dialogue-box.checkpoint-officer #dialogue-portrait{order:0;transform:none!important}#dialogue-box.checkpoint-officer .dialogue-content{order:1;padding:12px 4px 8px 18px}
+@media(max-width:650px){#dialogue-box.checkpoint-student .dialogue-content{padding:5px 8px 3px 0}#dialogue-box.checkpoint-officer .dialogue-content{padding:5px 0 3px 8px}}
