@@ -10,7 +10,7 @@ const quizQuestion=$('quiz-question'),quizAnswers=$('quiz-answers'),quizFeedback
 const quizNextBtn=$('quiz-next-btn');
 const keys={left:false,right:false};
 let selectedGender=null,playerName='นักเดินทาง',sceneIndex=0,dialogue=null,dialogueIndex=0,dialogueDone=null;
-let started=false,last=0,animationTime=0,coinFound=false,farmerTalked=false,quizActive=false,quizIndex=0,quizScore=0,quizShowingResult=false,quizRetrying=false,stage1Passed=false,farmIntroSeen=false,stage3Passed=false,stage4Passed=false,portIntroSeen=false,stage5Passed=false,stage6Passed=false;
+let started=false,last=0,animationTime=0,coinFound=false,farmerTalked=false,quizActive=false,quizIndex=0,quizScore=0,quizShowingResult=false,quizRetrying=false,stage1Passed=false,farmIntroSeen=false,stage3Passed=false,stage4Passed=false,portIntroSeen=false,stage5Passed=false,stage6Passed=false,stage7Passed=false;
 const worldWidth=1280;
 const player={x:150,w:150,h:270,speed:320,facing:1,moving:false};
 const farmer={x:1000,w:225,h:330};
@@ -19,6 +19,7 @@ const merchant={x:1040,w:236,h:335};
 const portOfficer={x:1120,w:220,h:340};
 const chineseMerchant={x:1035,w:250,h:365};
 const foreignExplorer={x:1035,w:250,h:365};
+const checkpointOfficer={x:1035,w:260,h:390};
 const images={};
 function image(path){if(!images[path]){const img=new Image();img.decoding='async';img.loading='eager';img.src=path;images[path]=img;}return images[path];}
 // เตรียมภาพฉากถัดไปล่วงหน้า เพื่อลดเวลารอเมื่อผู้เล่นเดินทางเปลี่ยนด่าน
@@ -33,6 +34,7 @@ function preloadDialoguePortraits(){
  for(const emotion of ['smile','explain','point'])files.push(`merchant-${emotion}.webp`);
  files.push('chinese_merchant_happy.png','chinese_merchant_explain.png','chinese_merchant_point_left.png','chinese_merchant_surprised.png','chinese_merchant_present_gold.png');
  files.push('foreign_explorer_friendly.png','foreign_explorer_explaining.png','foreign_explorer_pointing.png','foreign_explorer_surprised.png','foreign_explorer_laughing..png','foreign_explorer_welcoming.png');
+ files.push('npc_checkpoint_inspect_document.png','npc_checkpoint_point_left.png','npc_checkpoint_celebrate.png','npc_checkpoint_show_emblem.png','npc_checkpoint_fullbody.png','npc_checkpoint_stop.png','npc_checkpoint_neutral.png');
  files.forEach(path=>{const img=image(path);if(typeof img.decode==='function')img.decode().catch(()=>{});});
 }
 // ภาพตัวละครและฉากอื่น ๆ จะถูกโหลดเมื่อจำเป็น
@@ -45,7 +47,8 @@ const scenes=[
  {id:'market',bg:'marketplace-bg.jpg',objective:'ด่านที่ ๓ : สำรวจตลาดในกรุงศรีอยุธยา'},
  {id:'port',bg:'stage4-port.webp',objective:'ด่านที่ ๔ : เดินไปทางขวาเพื่อสำรวจท่ารับสินค้าจากหัวเมือง'},
  {id:'foreignTrade',bg:'foreign_trade_district_bg.png',objective:'ด่านที่ ๕ : เดินไปพูดคุยกับพ่อค้าชาวจีนในย่านการค้าต่างชาติ'},
- {id:'internationalPort',bg:'international_trade_port.png',objective:'ด่านที่ ๖ : เดินไปพูดคุยกับกัปตันฌองที่ท่าเรือการค้าต่างประเทศ'}
+ {id:'internationalPort',bg:'international_trade_port.png',objective:'ด่านที่ ๖ : เดินไปพูดคุยกับกัปตันฌองที่ท่าเรือการค้าต่างประเทศ'},
+ {id:'checkpoint',bg:'checkpoint_gate.png',objective:'ด่านที่ ๗ : เดินไปพูดคุยกับเจ้าหน้าที่ประจำด่านขนอน'}
 ];
 // Display a clear loading state while the current scene's actual image is downloading.
 let loadingRequest=0;
@@ -127,7 +130,9 @@ function showDialogueLine(){
   dialogueBox.classList.toggle('foreign-merchant',sceneIndex===7&&d.who==='chineseMerchant');
  dialogueBox.classList.toggle('explorer-student',sceneIndex===8&&d.who==='student');
  dialogueBox.classList.toggle('explorer-speaking',sceneIndex===8&&d.who==='foreignExplorer');
- speaker.textContent=d.who==='farmer'?'ชาวนา':d.who==='boatman'?'คนพายเรือ':d.who==='merchant'?'แม่ค้า':d.who==='portOfficer'?'นายท่ารับสินค้า':d.who==='chineseMerchant'?'พ่อค้าชาวจีน':d.who==='foreignExplorer'?'กัปตันฌอง':playerName;
+ dialogueBox.classList.toggle('checkpoint-student',sceneIndex===9&&d.who==='student');
+ dialogueBox.classList.toggle('checkpoint-officer',sceneIndex===9&&d.who==='checkpointOfficer');
+ speaker.textContent=d.who==='farmer'?'ชาวนา':d.who==='boatman'?'คนพายเรือ':d.who==='merchant'?'แม่ค้า':d.who==='portOfficer'?'นายท่ารับสินค้า':d.who==='chineseMerchant'?'พ่อค้าชาวจีน':d.who==='foreignExplorer'?'กัปตันฌอง':d.who==='checkpointOfficer'?'เจ้าหน้าที่ด่านขนอน':playerName;
  dialogueText.textContent=typeof d.text==='function'?d.text():d.text;
  portrait.classList.remove('hidden');
  let portraitPath;
@@ -137,6 +142,7 @@ function showDialogueLine(){
  else if(d.who==='portOfficer')portraitPath='port-officer-'+d.emotion+'.webp';
   else if(d.who==='chineseMerchant')portraitPath=({normal:'chinese_merchant_happy.png',smile:'chinese_merchant_happy.png',explain:'chinese_merchant_explain.png',point:'chinese_merchant_point_left.png',surprised:'chinese_merchant_surprised.png',proud:'chinese_merchant_present_gold.png'})[d.emotion]||'chinese_merchant_happy.png';
  else if(d.who==='foreignExplorer')portraitPath=({normal:'foreign_explorer_friendly.png',smile:'foreign_explorer_welcoming.png',explain:'foreign_explorer_explaining.png',point:'foreign_explorer_pointing.png',surprised:'foreign_explorer_surprised.png',laugh:'foreign_explorer_laughing..png',proud:'foreign_explorer_welcoming.png'})[d.emotion]||'foreign_explorer_friendly.png';
+ else if(d.who==='checkpointOfficer')portraitPath=({normal:'npc_checkpoint_neutral.png',stop:'npc_checkpoint_stop.png',proud:'npc_checkpoint_show_emblem.png',explain:'npc_checkpoint_inspect_document.png',inspect:'npc_checkpoint_inspect_document.png',point:'npc_checkpoint_point_left.png',celebrate:'npc_checkpoint_celebrate.png'})[d.emotion]||'npc_checkpoint_neutral.png';
  else portraitPath='student-'+selectedGender+'-'+d.emotion+'.webp';
  const portraitAsset=image(portraitPath);
  // Do not display the previous speaker while a new portrait is downloading.
@@ -179,7 +185,7 @@ function advanceDialogue(){
 previousBtn.addEventListener('click',goBackDialogue);
 nextBtn.addEventListener('click',advanceDialogue);
 function startGame(){
- showScreen('game-screen');sceneIndex=0;coinFound=false;farmerTalked=false;quizActive=false;quizShowingResult=false;quizRetrying=false;stage1Passed=false;stage2Passed=false;stage3Passed=false;stage4Passed=false;portIntroSeen=false;stage5Passed=false;stage6Passed=false;farmIntroSeen=false;player.x=150;
+ showScreen('game-screen');sceneIndex=0;coinFound=false;farmerTalked=false;quizActive=false;quizShowingResult=false;quizRetrying=false;stage1Passed=false;stage2Passed=false;stage3Passed=false;stage4Passed=false;portIntroSeen=false;stage5Passed=false;stage6Passed=false;stage7Passed=false;farmIntroSeen=false;player.x=150;
  objective.textContent=scenes[0].objective;prompt.classList.add('hidden');
   preloadScene(0);preloadScene(1);
  if(!started){started=true;last=performance.now();requestAnimationFrame(frame);}
@@ -459,6 +465,31 @@ function openInternationalPortQuiz(){quizIndex=0;quizScore=0;quizShowingResult=f
 function renderInternationalPortQuizQuestion(){const item=internationalPortQuiz[quizIndex];quizHeading.textContent='ด่านที่ ๖ : ท่าเรือการค้าต่างประเทศ';quizProgress.textContent='ข้อ '+(quizIndex+1)+' / '+internationalPortQuiz.length;quizQuestion.textContent=item.q;quizAnswers.replaceChildren();quizFeedback.textContent='';quizNextBtn.classList.add('hidden');item.options.forEach((option,index)=>{const button=document.createElement('button');button.type='button';button.className='quiz-answer';button.textContent=['ก','ข','ค','ง'][index]+'. '+option;button.addEventListener('click',()=>handleStageQuizAnswer(index,internationalPortQuiz,['ก','ข','ค','ง'],'คำตอบยังไม่ถูกต้องนะ คำใบ้: '+item.hint+' ลองเลือกอีกครั้ง'));quizAnswers.append(button);});}
 function finishInternationalPortQuiz(){quizShowingResult=true;stage6Passed=true;quizHeading.textContent='สรุปผลด่านที่ ๖';quizProgress.textContent='คะแนน '+quizScore+' / '+internationalPortQuiz.length;quizQuestion.textContent='ตอบถูกครบทั้ง ๓ ข้อ! ผ่านด่านท่าเรือการค้าต่างประเทศ';quizAnswers.replaceChildren();quizFeedback.textContent='เจ้าได้เรียนรู้สินค้าจากจีน ญี่ปุ่น อินเดีย ยุโรป และสินค้าจากฝรั่งเศส รวมถึงความสำคัญของการค้าระหว่างประเทศแล้ว';quizNextBtn.textContent='จบด่านที่ ๖ ✓';quizNextBtn.classList.remove('hidden');}
 
+
+function checkpointOfficerLine(text,emotion='normal'){return {who:'checkpointOfficer',emotion,text};}
+function checkpointDialogueLines(){return [
+ checkpointOfficerLine('หยุดก่อน! เจ้าหนูน้อย! จะรีบไปไหนกัน? ที่นี่ไม่ใช่ทางเดินเล่นนะ! ฮ่า ๆ!','stop'),
+ student(()=>genderWord('เอ่อ... ผมแค่กำลังเดินทางผ่านไปครับ ที่นี่คือที่ไหนเหรอครับ?','เอ่อ... หนูแค่กำลังเดินทางผ่านไปค่ะ ที่นี่คือที่ไหนเหรอคะ?'),'curious'),
+ checkpointOfficerLine('โอ้โฮ! เจ้ามาถึงด่านขนอนทั้งที แต่กลับไม่รู้จักอย่างนั้นรึ! ที่นี่เป็นด่านสำคัญสำหรับตรวจสอบสินค้าและจัดเก็บเงินจากสินค้าที่ผ่านเข้าออกพระนคร ข้านี่แหละเป็นเจ้าหน้าที่ผู้ดูแลด่านแห่งนี้!','proud'),
+ student(()=>genderWord('แล้วเงินที่เก็บจากสินค้าที่ผ่านด่าน เรียกว่าอะไรเหรอครับ?','แล้วเงินที่เก็บจากสินค้าที่ผ่านด่าน เรียกว่าอะไรเหรอคะ?'),'curious'),
+ checkpointOfficerLine('ฮ่า ๆ! เจ้าถามได้ถูกคนแล้ว! สิ่งนี้เรียกว่า “จังกอบ” หรือเรียกอีกอย่างว่า “ขนอน” เป็นเงินที่เรียกเก็บจากสินค้าที่นำผ่านด่าน บางครั้งก็เรียกว่าภาษีปากเรือด้วยนะ!','proud'),
+ student(()=>genderWord('แล้วท่านเก็บจังกอบจากพ่อค้าอย่างไรครับ?','แล้วท่านเก็บจังกอบจากพ่อค้าอย่างไรคะ?'),'curious'),
+ checkpointOfficerLine('มีหลายวิธีเชียวล่ะ! บางครั้งเราจะเก็บสินค้า ๑ ส่วน จากสินค้าทั้งหมด ๑๐ ส่วน หรือจะเก็บเป็นเงินก็ได้!','explain'),
+ checkpointOfficerLine('นอกจากนี้ยังอาจพิจารณาจากขนาดของพาหนะที่ใช้ขนส่งสินค้า เช่น น้ำหนัก ความยาว หรือความกว้างของเรือและพาหนะด้วยนะ! เห็นหรือไม่ว่างานของข้าต้องรอบคอบเพียงใด!','inspect'),
+ student(()=>genderWord('อ๋อ! คล้ายกับการเก็บภาษีในยุคของผมเลยครับ แต่สมัยก่อนใช้คำว่า “จังกอบ” ใช่ไหมครับ?','อ๋อ! คล้ายกับการเก็บภาษีในยุคของหนูเลยค่ะ แต่สมัยก่อนใช้คำว่า “จังกอบ” ใช่ไหมคะ?'),'surprised'),
+ checkpointOfficerLine('ถูกต้องแล้ว! เจ้านี่ช่างเรียนรู้ไวเสียจริง! ในสมัยนี้เราเรียกเงินที่เก็บจากสินค้าผ่านด่านว่า “จังกอบ” เห็นหรือไม่ว่าหน้าที่ของข้าสำคัญเพียงใด! ฮ่า ๆ!','proud'),
+ checkpointOfficerLine('เอาล่ะ! ไหน ๆ เจ้าก็สนใจงานของข้านัก ข้าจะทดสอบความรู้ให้สัก ๔ ข้อ หากตอบถูกทั้งหมด ข้าจะอนุญาตให้เจ้าผ่านด่านขนอนไปได้!','point')
+];}
+const checkpointQuiz=[
+ {q:'เงินที่เรียกเก็บจากสินค้าที่ผ่านด่านในสมัยอยุธยาเรียกว่าอะไร?',options:['ส่วย','จังกอบ','อากร','ฤชา'],answer:1,explain:'จังกอบ คือเงินหรือสิ่งของที่เรียกเก็บจากสินค้าที่ผ่านด่าน',hint:'เป็นคำเรียกการเก็บเงินจากสินค้าที่ผ่านด่านในสมัยอยุธยา'},
+ {q:'จังกอบมีความหมายตรงกับข้อใดมากที่สุด?',options:['เงินที่เก็บจากสินค้าที่ผ่านด่าน','เงินที่พ่อค้าจ่ายเพื่อซื้อสินค้า','เงินที่ใช้จ้างทหาร','เงินที่ประชาชนบริจาคให้วัด'],answer:0,explain:'จังกอบเป็นภาษีสินค้าผ่านด่าน หรือภาษีปากเรือ',hint:'ลองนึกถึงหน้าที่ของด่านขนอน'},
+ {q:'การเก็บจังกอบแบบเก็บสินค้า ๑ ส่วน จากสินค้าทั้งหมด ๑๐ ส่วน หมายถึงข้อใด?',options:['พ่อค้าต้องจ่ายเงิน ๑๐ ส่วน','เจ้าหน้าที่เก็บสินค้าไว้ทั้งหมด','เจ้าหน้าที่เก็บสินค้าไว้ ๑ ส่วน จากทั้งหมด ๑๐ ส่วน','พ่อค้าต้องนำสินค้า ๑ ส่วนไปขาย'],answer:2,explain:'เป็นการเก็บสินค้า ๑ ส่วน จากสินค้า ๑๐ ส่วน',hint:'อ่านข้อความให้ดี เจ้าหน้าที่เก็บไว้กี่ส่วนจากทั้งหมดกี่ส่วน'},
+ {q:'หากพ่อค้านำสินค้าบรรทุกเรือมาผ่านด่าน เจ้าหน้าที่อาจใช้สิ่งใดพิจารณาการเก็บจังกอบ?',options:['สีของเรือ','จำนวนลูกเรือเท่านั้น','ชื่อของพ่อค้า','น้ำหนัก ความยาว หรือความกว้างของพาหนะ'],answer:3,explain:'การเก็บจังกอบอาจพิจารณาจากขนาดของพาหนะ เช่น น้ำหนัก ความยาว หรือความกว้าง',hint:'นึกถึงขนาดและลักษณะของพาหนะที่ใช้ขนส่งสินค้า'}
+];
+function openCheckpointQuiz(){quizIndex=0;quizScore=0;quizShowingResult=false;quizRetrying=false;quizActive=true;quizPanel.classList.remove('hidden');renderCheckpointQuizQuestion();}
+function renderCheckpointQuizQuestion(){const item=checkpointQuiz[quizIndex];quizHeading.textContent='ด่านที่ ๗ : ด่านขนอน';quizProgress.textContent='ข้อ '+(quizIndex+1)+' / '+checkpointQuiz.length;quizQuestion.textContent=item.q;quizAnswers.replaceChildren();quizFeedback.textContent='';quizNextBtn.classList.add('hidden');item.options.forEach((option,index)=>{const button=document.createElement('button');button.type='button';button.className='quiz-answer';button.textContent=['ก','ข','ค','ง'][index]+'. '+option;button.addEventListener('click',()=>handleStageQuizAnswer(index,checkpointQuiz,['ก','ข','ค','ง'],'ยังไม่ถูกต้องนะ! คำใบ้: '+item.hint+' ลองเลือกใหม่อีกครั้ง'));quizAnswers.append(button);});}
+function finishCheckpointQuiz(){quizShowingResult=true;stage7Passed=true;quizHeading.textContent='สรุปผลด่านที่ ๗';quizProgress.textContent='คะแนน '+quizScore+' / '+checkpointQuiz.length;quizQuestion.textContent='ยอดเยี่ยม! ผ่านด่านขนอนแล้ว';quizAnswers.replaceChildren();quizFeedback.textContent='เจ้าได้เรียนรู้เรื่องจังกอบ วิธีการจัดเก็บ และหน้าที่ของด่านขนอนแล้ว';quizNextBtn.textContent='จบด่านที่ ๗ ✓';quizNextBtn.classList.remove('hidden');}
+
 // ===== แบบทดสอบด่านที่ ๓: ตลาดในกรุงศรีอยุธยา =====
 const marketQuiz=[
  {q:'ตลาดหน้าคุกเป็นสถานที่สำหรับทำอะไร?',options:['เป็นสถานที่ฝึกทหาร','เป็นสถานที่ซื้อขายและแลกเปลี่ยนสินค้า','เป็นสถานที่ประกอบพิธีกรรม'],answer:1,explain:'ตลาดเป็นแหล่งที่ผู้คนนำสินค้ามาซื้อขายและแลกเปลี่ยนกัน'},
@@ -584,6 +615,7 @@ function finishFarmerQuiz(){
  quizNextBtn.classList.remove('hidden');
 }
 quizNextBtn.addEventListener('click',()=>{
+ const isCheckpointQuiz=quizHeading.textContent.includes('ด่านที่ ๗')||quizHeading.textContent.includes('สรุปผลด่านที่ ๗');if(isCheckpointQuiz){if(quizShowingResult){quizPanel.classList.add('hidden');quizActive=false;objective.textContent='ผ่านด่านที่ ๗ แล้ว! เดินทางต่อไปยังลานเรียนรู้รายได้แผ่นดิน';return;}if(quizIndex<checkpointQuiz.length-1){quizIndex++;renderCheckpointQuizQuestion();}else finishCheckpointQuiz();return;}
  const isInternationalPortQuiz=quizHeading.textContent.includes('ด่านที่ ๖')||quizHeading.textContent.includes('สรุปผลด่านที่ ๖');if(isInternationalPortQuiz){if(quizShowingResult){quizPanel.classList.add('hidden');quizActive=false;objective.textContent='ผ่านด่านที่ ๖ แล้ว! เดินทางต่อไปยังด่านขนอนได้';return;}if(quizIndex<internationalPortQuiz.length-1){quizIndex++;renderInternationalPortQuizQuestion();}else finishInternationalPortQuiz();return;}
  const isForeignTradeQuiz=quizHeading.textContent.includes('ด่านที่ ๕')||quizHeading.textContent.includes('สรุปผลด่านที่ ๕');if(isForeignTradeQuiz){if(quizShowingResult){quizPanel.classList.add('hidden');quizActive=false;objective.textContent='ผ่านด่านที่ ๕ แล้ว! สำรวจย่านการค้าต่างชาติได้ตามสบาย';return;}if(quizIndex<foreignTradeQuiz.length-1){quizIndex++;renderForeignTradeQuizQuestion();}else finishForeignTradeQuiz();return;}
   const isPortQuiz=quizHeading.textContent.includes('ด่านที่ ๔')||quizHeading.textContent.includes('สรุปผลด่านที่ ๔');
@@ -637,7 +669,8 @@ function interact(){
  if(quizActive)return;
  if(dialogue){advanceDialogue();return;}
  const s=scenes[sceneIndex].id;
- if(s==='internationalPort'&&Math.abs(player.x-foreignExplorer.x)<350){if(stage6Passed)openDialogue(internationalPortDialogueLines());else openDialogue(internationalPortDialogueLines(),openInternationalPortQuiz);return;}
+ if(s==='checkpoint'&&Math.abs(player.x-checkpointOfficer.x)<360){if(stage7Passed)openDialogue(checkpointDialogueLines());else openDialogue(checkpointDialogueLines(),openCheckpointQuiz);return;}
+  if(s==='internationalPort'&&Math.abs(player.x-foreignExplorer.x)<350){if(stage6Passed)openDialogue(internationalPortDialogueLines());else openDialogue(internationalPortDialogueLines(),openInternationalPortQuiz);return;}
  if(s==='foreignTrade'&&Math.abs(player.x-chineseMerchant.x)<330){if(stage5Passed)openDialogue(foreignTradeDialogueLines());else openDialogue(foreignTradeDialogueLines(),openForeignTradeQuiz);return;}
   if(s==='port'&&Math.abs(player.x-portOfficer.x)<390){
   portIntroSeen=true;
@@ -711,7 +744,9 @@ function update(dt){
   (id==='boat'&&stage2Passed)||
   (id==='market'&&stage3Passed)||
   (id==='port'&&stage4Passed)||
-  (id==='foreignTrade'&&stage5Passed)
+  (id==='foreignTrade'&&stage5Passed)||
+  (id==='internationalPort'&&stage6Passed)||
+  (id==='checkpoint'&&stage7Passed)
  )){
   goToScene(sceneIndex+1,'forward');return;
  }
@@ -726,6 +761,7 @@ function update(dt){
  if(id==='port'&&Math.abs(player.x-portOfficer.x)<390)message=stage4Passed?'กด E เพื่อทบทวนบทสนทนากับนายท่า':'กด E เพื่อพูดคุยกับนายท่า';
  if(id==='foreignTrade'&&Math.abs(player.x-chineseMerchant.x)<330)message=stage5Passed?'กด E เพื่อทบทวนบทสนทนากับพ่อค้าชาวจีน':'กด E เพื่อพูดคุยกับพ่อค้าชาวจีน';
  if(id==='internationalPort'&&Math.abs(player.x-foreignExplorer.x)<350)message=stage6Passed?'กด E เพื่อทบทวนบทสนทนากับกัปตันฌอง':'กด E เพื่อพูดคุยกับกัปตันฌอง';
+ if(id==='checkpoint'&&Math.abs(player.x-checkpointOfficer.x)<360)message=stage7Passed?'กด E เพื่อทบทวนบทสนทนากับเจ้าหน้าที่ด่านขนอน':'กด E เพื่อพูดคุยกับเจ้าหน้าที่ด่านขนอน';
  prompt.textContent=message;prompt.classList.toggle('hidden',!message);
 }
 function drawBackground(){
@@ -788,6 +824,9 @@ function draw(){
     ctx.fillText('เจ้าพนักงานท่ารับสินค้า',portOfficer.x,ground-h-10);
    }
   }
+ }
+ if(id==='checkpoint'){
+  const img=image('npc_checkpoint_fullbody.png');if(img.complete&&img.naturalWidth){const w=checkpointOfficer.w,h=checkpointOfficer.h;ctx.save();ctx.translate(Math.round(checkpointOfficer.x),0);ctx.scale(-1,1);ctx.drawImage(img,-w/2,Math.round(ground-h),w,h);ctx.restore();if(Math.abs(player.x-checkpointOfficer.x)<260){ctx.font='bold 20px system-ui';ctx.fillStyle='#fff6db';ctx.textAlign='center';ctx.fillText('เจ้าหน้าที่ด่านขนอน',checkpointOfficer.x,ground-h-9);}}
  }
  if(id==='internationalPort'){
   const img=image('foreign_explorer_full.png');if(img.complete&&img.naturalWidth){const w=foreignExplorer.w,h=foreignExplorer.h;ctx.drawImage(img,Math.round(foreignExplorer.x-w/2),Math.round(ground-h),w,h);if(Math.abs(player.x-foreignExplorer.x)<260){ctx.font='bold 20px system-ui';ctx.fillStyle='#fff6db';ctx.textAlign='center';ctx.fillText('กัปตันฌอง',foreignExplorer.x,ground-h-9);}}
