@@ -10,13 +10,14 @@ const quizQuestion=$('quiz-question'),quizAnswers=$('quiz-answers'),quizFeedback
 const quizNextBtn=$('quiz-next-btn');
 const keys={left:false,right:false};
 let selectedGender=null,playerName='นักเดินทาง',sceneIndex=0,dialogue=null,dialogueIndex=0,dialogueDone=null;
-let started=false,last=0,animationTime=0,coinFound=false,farmerTalked=false,quizActive=false,quizIndex=0,quizScore=0,quizShowingResult=false,quizRetrying=false,stage1Passed=false,farmIntroSeen=false,stage3Passed=false,stage4Passed=false,portIntroSeen=false;
+let started=false,last=0,animationTime=0,coinFound=false,farmerTalked=false,quizActive=false,quizIndex=0,quizScore=0,quizShowingResult=false,quizRetrying=false,stage1Passed=false,farmIntroSeen=false,stage3Passed=false,stage4Passed=false,portIntroSeen=false,stage5Passed=false;
 const worldWidth=1280;
 const player={x:150,w:150,h:270,speed:320,facing:1,moving:false};
 const farmer={x:1000,w:225,h:330};
 const merchant={x:1040,w:236,h:335};
 // Stage 4: student enters at the left marker; the port officer stands at the right marker.
 const portOfficer={x:1120,w:220,h:340};
+const chineseMerchant={x:1035,w:250,h:365};
 const images={};
 function image(path){if(!images[path]){const img=new Image();img.decoding='async';img.loading='eager';img.src=path;images[path]=img;}return images[path];}
 // เตรียมภาพฉากถัดไปล่วงหน้า เพื่อลดเวลารอเมื่อผู้เล่นเดินทางเปลี่ยนด่าน
@@ -29,6 +30,7 @@ function preloadDialoguePortraits(){
  for(const emotion of ['normal','explain','smile','point'])files.push(`farmer-${emotion}.webp`);
  for(const emotion of ['normal','explain','point','greeting'])files.push(`boatman-${emotion}.webp`);
  for(const emotion of ['smile','explain','point'])files.push(`merchant-${emotion}.webp`);
+ files.push('chinese_merchant_happy.png','chinese_merchant_explain.png','chinese_merchant_point_left.png','chinese_merchant_surprised.png','chinese_merchant_present_gold.png');
  files.forEach(path=>{const img=image(path);if(typeof img.decode==='function')img.decode().catch(()=>{});});
 }
 // ภาพตัวละครและฉากอื่น ๆ จะถูกโหลดเมื่อจำเป็น
@@ -39,7 +41,8 @@ const scenes=[
  {id:'farm',bg:'stage1-farm.webp',objective:'นี่คือที่ไหนกันนะ? เดินไปถามชาวนาดูสิ'},
  {id:'boat',bg:null,objective:'ด่านที่ ๒ : การเดินทางทางเรือเข้าสู่พระนคร'},
  {id:'market',bg:'marketplace-bg.jpg',objective:'ด่านที่ ๓ : สำรวจตลาดในกรุงศรีอยุธยา'},
- {id:'port',bg:'stage4-port.webp',objective:'ด่านที่ ๔ : เดินไปทางขวาเพื่อสำรวจท่ารับสินค้าจากหัวเมือง'}
+ {id:'port',bg:'stage4-port.webp',objective:'ด่านที่ ๔ : เดินไปทางขวาเพื่อสำรวจท่ารับสินค้าจากหัวเมือง'},
+ {id:'foreignTrade',bg:'foreign_trade_district_bg.png',objective:'ด่านที่ ๕ : เดินไปพูดคุยกับพ่อค้าชาวจีนในย่านการค้าต่างชาติ'}
 ];
 // Display a clear loading state while the current scene's actual image is downloading.
 let loadingRequest=0;
@@ -117,7 +120,9 @@ function showDialogueLine(){
  dialogueBox.classList.toggle('port-officer',sceneIndex===6&&d.who==='portOfficer');
  // Port officer point artwork is already facing left; other expressions need mirroring.
  dialogueBox.classList.toggle('port-officer-point',sceneIndex===6&&d.who==='portOfficer'&&d.emotion==='point');
- speaker.textContent=d.who==='farmer'?'ชาวนา':d.who==='boatman'?'คนพายเรือ':d.who==='merchant'?'แม่ค้า':d.who==='portOfficer'?'นายท่ารับสินค้า':playerName;
+  dialogueBox.classList.toggle('foreign-student',sceneIndex===7&&d.who==='student');
+  dialogueBox.classList.toggle('foreign-merchant',sceneIndex===7&&d.who==='chineseMerchant');
+ speaker.textContent=d.who==='farmer'?'ชาวนา':d.who==='boatman'?'คนพายเรือ':d.who==='merchant'?'แม่ค้า':d.who==='portOfficer'?'นายท่ารับสินค้า':d.who==='chineseMerchant'?'พ่อค้าชาวจีน':playerName;
  dialogueText.textContent=typeof d.text==='function'?d.text():d.text;
  portrait.classList.remove('hidden');
  let portraitPath;
@@ -125,6 +130,7 @@ function showDialogueLine(){
  else if(d.who==='boatman')portraitPath='boatman-'+(d.emotion==='smile'?'greeting':d.emotion)+'.webp';
  else if(d.who==='merchant')portraitPath='merchant-'+d.emotion+'.webp';
  else if(d.who==='portOfficer')portraitPath='port-officer-'+d.emotion+'.webp';
+  else if(d.who==='chineseMerchant')portraitPath=({normal:'chinese_merchant_happy.png',smile:'chinese_merchant_happy.png',explain:'chinese_merchant_explain.png',point:'chinese_merchant_point_left.png',surprised:'chinese_merchant_surprised.png',proud:'chinese_merchant_present_gold.png'})[d.emotion]||'chinese_merchant_happy.png';
  else portraitPath='student-'+selectedGender+'-'+d.emotion+'.webp';
  const portraitAsset=image(portraitPath);
  // Do not display the previous speaker while a new portrait is downloading.
@@ -167,7 +173,7 @@ function advanceDialogue(){
 previousBtn.addEventListener('click',goBackDialogue);
 nextBtn.addEventListener('click',advanceDialogue);
 function startGame(){
- showScreen('game-screen');sceneIndex=0;coinFound=false;farmerTalked=false;quizActive=false;quizShowingResult=false;quizRetrying=false;stage1Passed=false;stage2Passed=false;stage3Passed=false;stage4Passed=false;portIntroSeen=false;farmIntroSeen=false;player.x=150;
+ showScreen('game-screen');sceneIndex=0;coinFound=false;farmerTalked=false;quizActive=false;quizShowingResult=false;quizRetrying=false;stage1Passed=false;stage2Passed=false;stage3Passed=false;stage4Passed=false;portIntroSeen=false;stage5Passed=false;farmIntroSeen=false;player.x=150;
  objective.textContent=scenes[0].objective;prompt.classList.add('hidden');
   preloadScene(0);preloadScene(1);
  if(!started){started=true;last=performance.now();requestAnimationFrame(frame);}
@@ -390,6 +396,36 @@ function finishPortQuiz(){
  quizNextBtn.classList.remove('hidden');
 }
 
+
+// ===== Stage 5: foreign trade district =====
+function chineseMerchantLine(text,emotion='normal'){return {who:'chineseMerchant',emotion,text};}
+function foreignTradeDialogueLines(){return [
+ student('โห! ที่นี่มีร้านค้าเยอะแยะเลย แถมยังมีผู้คนแต่งตัวแตกต่างกันเต็มไปหมด ที่นี่คงเป็นย่านการค้าต่างชาติที่นายท่าพูดถึงแน่ ๆ','curious'),
+ student('ลองเข้าไปดูสินค้ากันหน่อยดีกว่า!','normal'),
+ chineseMerchantLine('ยินดีต้อนรับพ่อหนุ่มน้อย! หรือแม่หนูน้อย! สนใจชมสินค้าจากแดนไกลของข้าบ้างหรือไม่?','smile'),
+ student(()=>genderWord('เอ๊ะ! คุณลุงเป็นพ่อค้าจากเมืองจีนหรือครับ?','เอ๊ะ! คุณลุงเป็นพ่อค้าจากเมืองจีนหรือคะ?'),'surprised'),
+ chineseMerchantLine('ถูกต้องแล้ว! ข้าเป็นพ่อค้าชาวจีน เดินทางมาค้าขายที่กรุงศรีอยุธยา ที่นี่มีพ่อค้าจากหลายบ้านหลายเมืองเดินทางเข้ามาติดต่อค้าขายกัน','normal'),
+ student(()=>genderWord('คุณลุงนำสินค้าอะไรจากเมืองจีนมาขายบ้างครับ?','คุณลุงนำสินค้าอะไรจากเมืองจีนมาขายบ้างคะ?'),'curious'),
+ chineseMerchantLine('สินค้าที่ข้านำมาขายมีหลายอย่างเลย! ทั้งเครื่องเคลือบ ผ้าไหม ผ้าแพร และกระทะเหล็ก ลองดูสินค้ารอบ ๆ ร้านข้าสิ','point'),
+ student(()=>genderWord('ว้าว! มีของหลายอย่างเลยนะครับ แล้วสินค้าเหล่านี้เดินทางมาถึงอยุธยาได้อย่างไรครับ?','ว้าว! มีของหลายอย่างเลยนะคะ แล้วสินค้าเหล่านี้เดินทางมาถึงอยุธยาได้อย่างไรคะ?'),'curious'),
+ chineseMerchantLine('พวกเราขนสินค้าลงเรือสำเภา เดินทางข้ามทะเลมายังกรุงศรีอยุธยา เรือสำเภาสามารถบรรทุกสินค้าได้มาก เหมาะกับการเดินทางค้าขายทางทะเล','explain'),
+ student(()=>genderWord('แสดงว่ามีพ่อค้าจากหลายประเทศเดินทางมาค้าขายที่นี่ด้วยใช่ไหมครับ?','แสดงว่ามีพ่อค้าจากหลายประเทศเดินทางมาค้าขายที่นี่ด้วยใช่ไหมคะ?'),'curious'),
+ chineseMerchantLine('ใช่แล้ว! นอกจากพ่อค้าชาวจีน ยังมีพ่อค้าจากชาติต่าง ๆ เช่น โปรตุเกส ฮอลันดา อังกฤษ และฝรั่งเศส เดินทางเข้ามาติดต่อค้าขายกับกรุงศรีอยุธยา','explain'),
+ student(()=>genderWord('การค้ากับชาวต่างชาติมีประโยชน์ต่อกรุงศรีอยุธยาอย่างไรครับ?','การค้ากับชาวต่างชาติมีประโยชน์ต่อกรุงศรีอยุธยาอย่างไรคะ?'),'curious'),
+ chineseMerchantLine('การค้าทำให้ผู้คนได้ซื้อขายแลกเปลี่ยนสินค้า เกิดรายได้แก่บ้านเมือง และยังทำให้เกิดการแลกเปลี่ยนวัฒนธรรมระหว่างผู้คนต่างถิ่นอีกด้วย','explain'),
+ student(()=>genderWord('เข้าใจแล้วครับ! อยุธยาไม่ได้เป็นเพียงเมืองที่รับสินค้าจากต่างแดน แต่ยังเป็นเมืองที่ผู้คนจากหลายชาติมาพบปะค้าขายกันด้วย','เข้าใจแล้วค่ะ! อยุธยาไม่ได้เป็นเพียงเมืองที่รับสินค้าจากต่างแดน แต่ยังเป็นเมืองที่ผู้คนจากหลายชาติมาพบปะค้าขายกันด้วย'),'normal'),
+ chineseMerchantLine('ถูกต้องแล้ว! การค้ากับต่างชาติเป็นส่วนหนึ่งที่ทำให้กรุงศรีอยุธยามีความสำคัญในฐานะเมืองการค้า เอาล่ะ ข้ามีคำถามสามข้อให้เจ้าลองตอบ หากตอบถูกครบทุกข้อ เจ้าก็จะผ่านด่านนี้!','proud'),
+ student('ตกลงครับ/ค่ะ! พร้อมแล้ว!','normal')
+];}
+const foreignTradeQuiz=[
+ {q:'พ่อค้าชาวจีนในบทสนทนานำสินค้าใดเข้ามาขายในกรุงศรีอยุธยา?',options:['เครื่องเคลือบ ผ้าไหม ผ้าแพร และกระทะเหล็ก','ข้าว ปลาแห้ง และผลไม้','ไม้และของป่า','เครื่องจักรและเครื่องใช้ไฟฟ้า'],answer:0,explain:'พ่อค้าชาวจีนบอกว่านำเครื่องเคลือบ ผ้าไหม ผ้าแพร และกระทะเหล็กมาขาย',hint:'ทบทวนตอนที่พ่อค้าชี้แนะนำสินค้าภายในร้าน'},
+ {q:'พ่อค้าชาวจีนใช้พาหนะใดขนส่งสินค้าข้ามทะเลมายังกรุงศรีอยุธยา?',options:['เกวียน','เรือสำเภา','ช้าง','รถม้า'],answer:1,explain:'พ่อค้าขนสินค้าลงเรือสำเภาเพื่อเดินทางค้าขายทางทะเล',hint:'พ่อค้าเล่าว่าตนขนสินค้าลงพาหนะที่เดินทางข้ามทะเลได้'},
+ {q:'การค้ากับชาวต่างชาติส่งผลดีต่อกรุงศรีอยุธยาอย่างไร?',options:['ทำให้ผู้คนเลิกค้าขาย','ทำให้ไม่มีการแลกเปลี่ยนสินค้า','ช่วยสร้างรายได้และเกิดการแลกเปลี่ยนวัฒนธรรม','ทำให้การค้าภายในเมืองหยุดลง'],answer:2,explain:'การค้าช่วยให้เกิดรายได้และการแลกเปลี่ยนวัฒนธรรมระหว่างผู้คนต่างถิ่น',hint:'ลองนึกถึงสิ่งที่พ่อค้าอธิบายเกี่ยวกับประโยชน์ของการค้ากับต่างชาติ'}
+];
+function openForeignTradeQuiz(){quizIndex=0;quizScore=0;quizShowingResult=false;quizRetrying=false;quizActive=true;quizPanel.classList.remove('hidden');renderForeignTradeQuizQuestion();}
+function renderForeignTradeQuizQuestion(){const item=foreignTradeQuiz[quizIndex];quizHeading.textContent='ด่านที่ ๕ : ย่านการค้าต่างชาติ';quizProgress.textContent='ข้อ '+(quizIndex+1)+' / '+foreignTradeQuiz.length;quizQuestion.textContent=item.q;quizAnswers.replaceChildren();quizFeedback.textContent='';quizNextBtn.classList.add('hidden');item.options.forEach((option,index)=>{const button=document.createElement('button');button.type='button';button.className='quiz-answer';button.textContent=['ก','ข','ค','ง'][index]+'. '+option;button.addEventListener('click',()=>handleStageQuizAnswer(index,foreignTradeQuiz,['ก','ข','ค','ง'],'คำตอบยังไม่ถูกต้องนะ คำใบ้: '+item.hint+' ลองเลือกอีกครั้ง'));quizAnswers.append(button);});}
+function finishForeignTradeQuiz(){quizShowingResult=true;stage5Passed=true;quizHeading.textContent='สรุปผลด่านที่ ๕';quizProgress.textContent='คะแนน '+quizScore+' / '+foreignTradeQuiz.length;quizQuestion.textContent='ตอบถูกครบทั้ง ๓ ข้อ! ผ่านด่านย่านการค้าต่างชาติ';quizAnswers.replaceChildren();quizFeedback.textContent='เจ้าได้เรียนรู้เรื่องสินค้านำเข้าจากจีน การขนส่งทางเรือสำเภา และความสำคัญของการค้ากับชาวต่างชาติแล้ว';quizNextBtn.textContent='จบด่านที่ ๕ ✓';quizNextBtn.classList.remove('hidden');}
+
 // ===== แบบทดสอบด่านที่ ๓: ตลาดในกรุงศรีอยุธยา =====
 const marketQuiz=[
  {q:'ตลาดน้อยเป็นสถานที่สำหรับทำอะไร?',options:['เป็นสถานที่ฝึกทหาร','เป็นสถานที่ซื้อขายและแลกเปลี่ยนสินค้า','เป็นสถานที่ประกอบพิธีกรรม'],answer:1,explain:'ตลาดเป็นแหล่งที่ผู้คนนำสินค้ามาซื้อขายและแลกเปลี่ยนกัน'},
@@ -515,7 +551,8 @@ function finishFarmerQuiz(){
  quizNextBtn.classList.remove('hidden');
 }
 quizNextBtn.addEventListener('click',()=>{
- const isPortQuiz=quizHeading.textContent.includes('ด่านที่ ๔')||quizHeading.textContent.includes('สรุปผลด่านที่ ๔');
+ const isForeignTradeQuiz=quizHeading.textContent.includes('ด่านที่ ๕')||quizHeading.textContent.includes('สรุปผลด่านที่ ๕');if(isForeignTradeQuiz){if(quizShowingResult){quizPanel.classList.add('hidden');quizActive=false;objective.textContent='ผ่านด่านที่ ๕ แล้ว! สำรวจย่านการค้าต่างชาติได้ตามสบาย';return;}if(quizIndex<foreignTradeQuiz.length-1){quizIndex++;renderForeignTradeQuizQuestion();}else finishForeignTradeQuiz();return;}
+  const isPortQuiz=quizHeading.textContent.includes('ด่านที่ ๔')||quizHeading.textContent.includes('สรุปผลด่านที่ ๔');
  if(isPortQuiz){
   if(quizShowingResult){
    quizPanel.classList.add('hidden');quizActive=false;
@@ -566,7 +603,8 @@ function interact(){
  if(quizActive)return;
  if(dialogue){advanceDialogue();return;}
  const s=scenes[sceneIndex].id;
- if(s==='port'&&Math.abs(player.x-portOfficer.x)<390){
+ if(s==='foreignTrade'&&Math.abs(player.x-chineseMerchant.x)<330){if(stage5Passed)openDialogue(foreignTradeDialogueLines());else openDialogue(foreignTradeDialogueLines(),openForeignTradeQuiz);return;}
+  if(s==='port'&&Math.abs(player.x-portOfficer.x)<390){
   portIntroSeen=true;
   if(stage4Passed)openDialogue(portDialogueLines());
   else openDialogue(portDialogueLines(),openPortQuiz);
@@ -636,7 +674,8 @@ function update(dt){
   (sceneIndex<3&&(id==='school'||id==='road'||(id==='coin'&&coinFound)))||
   (id==='farm'&&stage1Passed)||
   (id==='boat'&&stage2Passed)||
-  (id==='market'&&stage3Passed)
+  (id==='market'&&stage3Passed)||
+  (id==='port'&&stage4Passed)
  )){
   goToScene(sceneIndex+1,'forward');return;
  }
@@ -649,6 +688,7 @@ function update(dt){
  if(id==='boat')message='กด E เพื่อฟังเรื่องราวระหว่างเดินทางอีกครั้ง';
  if(id==='market'&&Math.abs(player.x-merchant.x)<270)message='กด E เพื่อพูดคุยกับแม่ค้า';
  if(id==='port'&&Math.abs(player.x-portOfficer.x)<390)message=stage4Passed?'กด E เพื่อทบทวนบทสนทนากับนายท่า':'กด E เพื่อพูดคุยกับนายท่า';
+ if(id==='foreignTrade'&&Math.abs(player.x-chineseMerchant.x)<330)message=stage5Passed?'กด E เพื่อทบทวนบทสนทนากับพ่อค้าชาวจีน':'กด E เพื่อพูดคุยกับพ่อค้าชาวจีน';
  prompt.textContent=message;prompt.classList.toggle('hidden',!message);
 }
 function drawBackground(){
@@ -711,6 +751,9 @@ function draw(){
     ctx.fillText('เจ้าพนักงานท่ารับสินค้า',portOfficer.x,ground-h-10);
    }
   }
+ }
+ if(id==='foreignTrade'){
+  const img=image('chinese_merchant_full.png');if(img.complete&&img.naturalWidth){const w=chineseMerchant.w,h=chineseMerchant.h;ctx.save();ctx.translate(Math.round(chineseMerchant.x),0);ctx.scale(-1,1);ctx.drawImage(img,-w/2,Math.round(ground-h),w,h);ctx.restore();if(Math.abs(player.x-chineseMerchant.x)<260){ctx.font='bold 20px system-ui';ctx.fillStyle='#fff6db';ctx.textAlign='center';ctx.fillText('พ่อค้าชาวจีน',chineseMerchant.x,ground-h-9);}}
  }
  if(id==='market'){
   const merchantImg=image('merchant-idle.webp');
