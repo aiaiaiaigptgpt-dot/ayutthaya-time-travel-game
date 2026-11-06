@@ -102,3 +102,8 @@ button:disabled{opacity:.55;cursor:not-allowed}
  #dialogue-box.port-student .dialogue-content{padding:5px 8px 3px 0}
  #dialogue-box.port-officer .dialogue-content{padding:5px 0 3px 8px}
 }
+
+/* Stage 5 dialogue portrait placement */
+#dialogue-box.foreign-student{flex-direction:row!important}#dialogue-box.foreign-student #dialogue-portrait{order:0;transform:none!important}#dialogue-box.foreign-student .dialogue-content{order:1;padding:12px 18px 8px 4px}
+#dialogue-box.foreign-merchant{flex-direction:row-reverse!important}#dialogue-box.foreign-merchant #dialogue-portrait{order:0;transform:none!important}#dialogue-box.foreign-merchant .dialogue-content{order:1;padding:12px 4px 8px 18px}
+@media(max-width:650px){#dialogue-box.foreign-student .dialogue-content{padding:5px 8px 3px 0}#dialogue-box.foreign-merchant .dialogue-content{padding:5px 0 3px 8px}}
