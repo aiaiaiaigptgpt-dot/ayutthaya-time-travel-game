@@ -1,6 +1,6 @@
 "use strict";
 const $=id=>document.getElementById(id);
-const screens=['cover-screen','select-screen','name-screen','game-screen'];
+const screens=['cover-screen','select-screen','name-screen','game-screen','result-screen'];
 const canvas=$('game'),ctx=canvas.getContext('2d');
 const objective=$('objective'),prompt=$('interaction-prompt');
 const dialogueBox=$('dialogue-box'),portrait=$('dialogue-portrait');
@@ -10,6 +10,7 @@ const quizQuestion=$('quiz-question'),quizAnswers=$('quiz-answers'),quizFeedback
 const quizNextBtn=$('quiz-next-btn');
 const keys={left:false,right:false};
 let selectedGender=null,playerName='นักเดินทาง',sceneIndex=0,dialogue=null,dialogueIndex=0,dialogueDone=null;
+let royalFirstAnswerLocked=false,royalResultSaved=false;
 let started=false,last=0,animationTime=0,coinFound=false,farmerTalked=false,quizActive=false,quizIndex=0,quizScore=0,quizShowingResult=false,quizRetrying=false,stage1Passed=false,farmIntroSeen=false,stage3Passed=false,stage4Passed=false,portIntroSeen=false,stage5Passed=false,stage6Passed=false,stage7Passed=false,stage8Passed=false,stage9Passed=false,stage9IntroSeen=false;
 const worldWidth=1280;
 const player={x:150,w:150,h:270,speed:320,facing:1,moving:false};
@@ -241,6 +242,7 @@ function advanceDialogue(){
 previousBtn.addEventListener('click',goBackDialogue);
 nextBtn.addEventListener('click',advanceDialogue);
 function startGame(){
+ royalFirstAnswerLocked=false;royalResultSaved=false;
  showScreen('game-screen');sceneIndex=0;coinFound=false;farmerTalked=false;quizActive=false;quizShowingResult=false;quizRetrying=false;stage1Passed=false;stage2Passed=false;stage3Passed=false;stage4Passed=false;portIntroSeen=false;stage5Passed=false;stage6Passed=false;stage7Passed=false;stage8Passed=false;stage9Passed=false;stage9IntroSeen=false;farmIntroSeen=false;player.x=150;
  objective.textContent=scenes[0].objective;prompt.classList.add('hidden');
   preloadScene(0);preloadScene(1);
@@ -605,11 +607,51 @@ const finalRoyalQuiz=[
  {q:'ข้อใดเป็นตัวอย่างสินค้าส่งออกของกรุงศรีอยุธยา?',options:['โทรศัพท์และคอมพิวเตอร์','รถยนต์และเครื่องใช้ไฟฟ้า','ดีบุก พริกไทย ครั่ง และขี้ผึ้ง'],answer:2,explain:'อยุธยาส่งออกสินค้าหลายชนิด เช่น ดีบุก พริกไทย ครั่ง ขี้ผึ้ง และหนังสัตว์'},
  {q:'คำว่า “จิ้มก้อง” เกี่ยวข้องกับความสัมพันธ์ระหว่างอยุธยากับจีนอย่างไร?',options:['การส่งคณะทูตพร้อมเครื่องราชบรรณาการไปถวายจักรพรรดิจีน','การเก็บเงินจากเรือที่ผ่านด่าน','การซื้อขายสินค้าในตลาดท้องถิ่น'],answer:0,explain:'จิ้มก้องเป็นระบบความสัมพันธ์แบบบรรณาการที่เกี่ยวข้องกับการค้าระหว่างอยุธยากับจีน'}
 ];
-function openRoyalQuiz(){quizIndex=0;quizScore=0;quizShowingResult=false;quizRetrying=false;quizActive=true;quizPanel.classList.remove('hidden');renderRoyalQuizQuestion();}
+function openRoyalQuiz(){quizIndex=0;quizScore=0;royalFirstAnswerLocked=false;quizShowingResult=false;quizRetrying=false;quizActive=true;quizPanel.classList.remove('hidden');renderRoyalQuizQuestion();}
 function renderRoyalQuizQuestion(){
- const item=finalRoyalQuiz[quizIndex];quizHeading.textContent='บททดสอบสุดท้ายแห่งกรุงศรีอยุธยา';quizProgress.textContent='ข้อ '+(quizIndex+1)+' / '+finalRoyalQuiz.length;quizQuestion.textContent=item.q;quizAnswers.replaceChildren();quizFeedback.textContent='';quizNextBtn.classList.add('hidden');
- item.options.forEach((option,index)=>{const button=document.createElement('button');button.type='button';button.className='quiz-answer';button.textContent=['ก','ข','ค'][index]+'. '+option;button.addEventListener('click',()=>handleStageQuizAnswer(index,finalRoyalQuiz,['ก','ข','ค'],'ยังไม่ถูกต้องนะ! ลองทบทวนความรู้จากด่านที่ผ่านมาแล้วเลือกใหม่อีกครั้ง'));quizAnswers.append(button);});
+ royalFirstAnswerLocked=false;const item=finalRoyalQuiz[quizIndex];quizHeading.textContent='บททดสอบสุดท้ายแห่งกรุงศรีอยุธยา';quizProgress.textContent='ข้อ '+(quizIndex+1)+' / '+finalRoyalQuiz.length;quizQuestion.textContent=item.q;quizAnswers.replaceChildren();quizFeedback.textContent='';quizNextBtn.classList.add('hidden');
+ item.options.forEach((option,index)=>{const button=document.createElement('button');button.type='button';button.className='quiz-answer';button.textContent=['ก','ข','ค'][index]+'. '+option;button.addEventListener('click',()=>handleRoyalQuizAnswer(index));quizAnswers.append(button);});
 }
+
+function handleRoyalQuizAnswer(selected){
+ if(royalFirstAnswerLocked)return;
+ royalFirstAnswerLocked=true;
+ const item=finalRoyalQuiz[quizIndex];
+ const buttons=[...quizAnswers.querySelectorAll('button')];
+ buttons.forEach((button,index)=>{
+  button.disabled=true;
+  if(index===item.answer)button.classList.add('correct');
+  if(index===selected&&selected!==item.answer)button.classList.add('incorrect');
+ });
+ if(selected===item.answer)quizScore++;
+ quizFeedback.textContent=(selected===item.answer?'ถูกต้อง! ':'คำตอบที่ถูกต้องคือ '+['ก','ข','ค'][item.answer]+'. '+item.options[item.answer]+' — ')+item.explain;
+ quizNextBtn.textContent=quizIndex===finalRoyalQuiz.length-1?'ดูผลการเรียนรู้ ▶':'ข้อต่อไป ▶';
+ quizNextBtn.classList.remove('hidden');
+}
+function showRoyalResult(){
+ quizActive=false;quizPanel.classList.add('hidden');dialogueBox.classList.add('hidden');
+ $('result-player').textContent=playerName;
+ $('result-score').textContent=String(quizScore)+' / '+String(finalRoyalQuiz.length);
+ $('result-message').textContent=quizScore>=8?'ยอดเยี่ยม! เจ้าคือยอดนักเดินทางข้ามกาลเวลา':quizScore>=5?'ทำได้ดี! ทุกการเดินทางคือการเรียนรู้':'ขอบใจที่ร่วมเดินทาง เจ้าสามารถทบทวนบทเรียนได้เสมอ';
+ royalResultSaved=false;
+ $('result-save-status').textContent='';
+ showScreen('result-screen');
+}
+function downloadRoyalResult(){
+ const quote=value=>'"'+String(value).replaceAll('"','""')+'"';
+ const rows=[['ชื่อนักเรียน','คะแนน','คะแนนเต็ม','วันที่บันทึก'],[playerName,quizScore,finalRoyalQuiz.length,new Date().toLocaleString('th-TH')]];
+ const csv='\uFEFF'+rows.map(row=>row.map(quote).join(',')).join('\r\n');
+ const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});
+ const url=URL.createObjectURL(blob);
+ const link=document.createElement('a');
+ link.href=url;link.download='ayutthaya-stage9-result.csv';document.body.appendChild(link);link.click();link.remove();
+ URL.revokeObjectURL(url);
+ royalResultSaved=true;
+ $('result-save-status').textContent='บันทึกผลเป็นไฟล์ CSV แล้ว สามารถนำไฟล์ไปส่งให้ครูได้';
+}
+$('result-download-btn').addEventListener('click',downloadRoyalResult);
+$('result-restart-btn').addEventListener('click',()=>{showScreen('cover-screen');});
+
 function finishRoyalQuiz(){
  quizShowingResult=true;stage9Passed=true;quizHeading.textContent='สรุปผลบททดสอบสุดท้าย';quizProgress.textContent='คะแนน '+quizScore+' / '+finalRoyalQuiz.length;quizQuestion.textContent='ทำแบบทดสอบครบทั้ง ๑๐ ข้อแล้ว!';quizAnswers.replaceChildren();quizFeedback.textContent='เจ้าได้ทบทวนความรู้เรื่องวิถีชีวิต การเดินทาง การค้า ด่านขนอน และพระคลังสินค้าของกรุงศรีอยุธยาแล้ว';quizNextBtn.textContent='รับฟังคำเฉลยและกลับบ้าน ▶';quizNextBtn.classList.remove('hidden');
 }
@@ -750,7 +792,7 @@ function finishFarmerQuiz(){
  quizNextBtn.classList.remove('hidden');
 }
 quizNextBtn.addEventListener('click',()=>{
- const isRoyalQuiz=quizHeading.textContent.includes('บททดสอบสุดท้าย')||quizHeading.textContent.includes('สรุปผลบททดสอบสุดท้าย');if(isRoyalQuiz){if(quizShowingResult){quizPanel.classList.add('hidden');quizActive=false;openDialogue(royalEndingDialogue(),()=>{quizPanel.classList.remove('hidden');quizHeading.textContent='การเดินทางสิ้นสุดลงแล้ว';quizProgress.textContent='ภารกิจสำเร็จ';quizQuestion.textContent='ยินดีด้วย '+playerName+'! เจ้ากลับสู่โลกปัจจุบันแล้ว';quizAnswers.replaceChildren();quizFeedback.textContent='อดีตคือรากฐานของปัจจุบัน และประวัติศาสตร์คือบทเรียนสำหรับอนาคต';quizNextBtn.classList.add('hidden');quizActive=true;});return;}if(quizIndex<finalRoyalQuiz.length-1){quizIndex++;renderRoyalQuizQuestion();}else finishRoyalQuiz();return;}
+ const isRoyalQuiz=quizHeading.textContent.includes('บททดสอบสุดท้าย')||quizHeading.textContent.includes('สรุปผลบททดสอบสุดท้าย');if(isRoyalQuiz){if(quizShowingResult){quizPanel.classList.add('hidden');quizActive=false;openDialogue(royalEndingDialogue(),()=>{showRoyalResult();});return;}if(quizIndex<finalRoyalQuiz.length-1){quizIndex++;renderRoyalQuizQuestion();}else finishRoyalQuiz();return;}
  const isTreasuryQuiz=quizHeading.textContent.includes('ด่านที่ ๘')||quizHeading.textContent.includes('สรุปผลด่านที่ ๘');if(isTreasuryQuiz){if(quizShowingResult){quizPanel.classList.add('hidden');quizActive=false;objective.textContent='ผ่านด่านที่ ๘ แล้ว! เดินทางต่อไปยังพระราชวังหลวง';return;}if(quizIndex<treasuryQuiz.length-1){quizIndex++;renderTreasuryQuizQuestion();}else finishTreasuryQuiz();return;}
  const isCheckpointQuiz=quizHeading.textContent.includes('ด่านที่ ๗')||quizHeading.textContent.includes('สรุปผลด่านที่ ๗');if(isCheckpointQuiz){if(quizShowingResult){quizPanel.classList.add('hidden');quizActive=false;objective.textContent='ผ่านด่านที่ ๗ แล้ว! เดินทางต่อไปยังลานเรียนรู้รายได้แผ่นดิน';return;}if(quizIndex<checkpointQuiz.length-1){quizIndex++;renderCheckpointQuizQuestion();}else finishCheckpointQuiz();return;}
  const isInternationalPortQuiz=quizHeading.textContent.includes('ด่านที่ ๖')||quizHeading.textContent.includes('สรุปผลด่านที่ ๖');if(isInternationalPortQuiz){if(quizShowingResult){quizPanel.classList.add('hidden');quizActive=false;objective.textContent='ผ่านด่านที่ ๖ แล้ว! เดินทางต่อไปยังด่านขนอนได้';return;}if(quizIndex<internationalPortQuiz.length-1){quizIndex++;renderInternationalPortQuizQuestion();}else finishInternationalPortQuiz();return;}
