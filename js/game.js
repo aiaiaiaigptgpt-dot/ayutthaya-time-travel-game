@@ -10,7 +10,7 @@ const quizQuestion=$('quiz-question'),quizAnswers=$('quiz-answers'),quizFeedback
 const quizNextBtn=$('quiz-next-btn');
 const keys={left:false,right:false};
 let selectedGender=null,playerName='นักเดินทาง',sceneIndex=0,dialogue=null,dialogueIndex=0,dialogueDone=null;
-let started=false,last=0,animationTime=0,coinFound=false,farmerTalked=false,quizActive=false,quizIndex=0,quizScore=0,quizShowingResult=false,quizRetrying=false,stage1Passed=false,farmIntroSeen=false,stage3Passed=false,stage4Passed=false,portIntroSeen=false,stage5Passed=false,stage6Passed=false,stage7Passed=false,stage8Passed=false;
+let started=false,last=0,animationTime=0,coinFound=false,farmerTalked=false,quizActive=false,quizIndex=0,quizScore=0,quizShowingResult=false,quizRetrying=false,stage1Passed=false,farmIntroSeen=false,stage3Passed=false,stage4Passed=false,portIntroSeen=false,stage5Passed=false,stage6Passed=false,stage7Passed=false,stage8Passed=false,stage9Passed=false,stage9IntroSeen=false;
 const worldWidth=1280;
 const player={x:150,w:150,h:270,speed:320,facing:1,moving:false};
 const farmer={x:1000,w:225,h:330};
@@ -861,7 +861,7 @@ function update(dt){
  if(id==='checkpoint'&&Math.abs(player.x-checkpointOfficer.x)<360)message=stage7Passed?'กด E เพื่อทบทวนบทสนทนากับเจ้าหน้าที่ด่านขนอน':'กด E เพื่อพูดคุยกับเจ้าหน้าที่ด่านขนอน';
  if(id==='royalPalace'&&player.x>worldWidth-145&&stage9Passed){objective.textContent='ภารกิจสำเร็จ! เจ้าได้กลับสู่โลกปัจจุบันแล้ว';}
  if(id==='treasury'&&Math.abs(player.x-treasuryOfficer.x)<370)message=stage8Passed?'กด E เพื่อทบทวนบทสนทนากับเจ้าพนักงานพระคลังสินค้า':'กด E เพื่อพูดคุยกับเจ้าพนักงานพระคลังสินค้า';
- if(id==='royalPalace'&&Math.abs(player.x-kingNarai.x)<390)message=stage9Passed?'กด E เพื่อพบชายปริศนาอีกครั้ง':'กด E เพื่อพูดคุยกับชายปริศนา';
+ if(id==='royalPalace'&&Math.abs(player.x-kingNarai.x)<390)message=stage9Passed?'กด E เพื่อสนทนากับสมเด็จพระนารายณ์อีกครั้ง':'กด E เพื่อพบชายปริศนา';
  prompt.textContent=message;prompt.classList.toggle('hidden',!message);
 }
 function drawBackground(){
