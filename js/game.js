@@ -25,6 +25,49 @@ const treasuryOfficer={x:1040,w:255,h:390};
 const kingNarai={x:1040,w:260,h:390};
 const images={};
 function image(path){if(!images[path]){const img=new Image();img.decoding='async';img.loading='eager';img.src=path;images[path]=img;}return images[path];}
+const royalPortraitCache=new WeakMap();
+// Stage 9 only: remove an opaque white/gray/checkered image backdrop at display
+// time. Preserve the actual king sprite, costume, and golden halo.
+function royalPortraitSrc(img){
+ if(royalPortraitCache.has(img))return royalPortraitCache.get(img);
+ const w=img.naturalWidth,h=img.naturalHeight;
+ if(!w||!h)return img.src;
+ try{
+  const canvas=document.createElement('canvas');canvas.width=w;canvas.height=h;
+  const c=canvas.getContext('2d',{willReadFrequently:true});
+  c.drawImage(img,0,0);
+  const frame=c.getImageData(0,0,w,h),data=frame.data,n=w*h;
+  const seen=new Uint8Array(n),queue=new Int32Array(n);
+  let head=0,tail=0,changed=0;
+  function isBackdrop(pos){
+   const p=pos*4,r=data[p],g=data[p+1],b=data[p+2],a=data[p+3];
+   if(a<12)return true;
+   const hi=Math.max(r,g,b),lo=Math.min(r,g,b);
+   return lo>=125&&hi-lo<=35; // white/gray pixels, not gold/red clothing
+  }
+  function add(pos){
+   if(seen[pos]||!isBackdrop(pos))return;
+   seen[pos]=1;queue[tail++]=pos;
+  }
+  for(let x=0;x<w;x++){add(x);add((h-1)*w+x);}
+  for(let y=1;y<h-1;y++){add(y*w);add(y*w+w-1);}
+  while(head<tail){
+   const pos=queue[head++],pixel=pos*4;
+   if(data[pixel+3]>0){data[pixel+3]=0;changed++;}
+   const x=pos%w,y=(pos-x)/w;
+   if(x>0)add(pos-1);
+   if(x<w-1)add(pos+1);
+   if(y>0)add(pos-w);
+   if(y<h-1)add(pos+w);
+  }
+  if(changed){
+   c.putImageData(frame,0,0);
+   const clean=canvas.toDataURL('image/png');
+   royalPortraitCache.set(img,clean);return clean;
+  }
+ }catch(error){console.warn('Stage 9 portrait background cleanup unavailable',error);}
+ royalPortraitCache.set(img,img.src);return img.src;
+}
 // เตรียมภาพฉากถัดไปล่วงหน้า เพื่อลดเวลารอเมื่อผู้เล่นเดินทางเปลี่ยนด่าน
 function preloadScene(index){const scene=scenes[index];if(scene&&scene.bg)image(scene.bg);}
 // โหลดภาพใบหน้าตัวละครทุกอารมณ์ไว้ก่อนเริ่มบทสนทนา ลดอาการสะดุดตอนกด “ถัดไป”
@@ -166,7 +209,7 @@ function showDialogueLine(){
  portrait.alt=speaker.textContent;
  const applyPortrait=()=>{
   if(portraitRequest!==portraitRequestId||!dialogue||dialogue[dialogueIndex]!==d)return;
-  if(portraitAsset.naturalWidth){portrait.src=portraitAsset.src;portrait.style.visibility='visible';}
+  if(portraitAsset.naturalWidth){portrait.src=d.who==='kingNarai'?royalPortraitSrc(portraitAsset):portraitAsset.src;portrait.style.visibility='visible';}
  };
  if(portraitAsset.complete)applyPortrait();
  else {
