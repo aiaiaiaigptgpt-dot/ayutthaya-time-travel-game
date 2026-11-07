@@ -130,3 +130,11 @@ button:disabled{opacity:.55;cursor:not-allowed}
  #dialogue-box.treasury-student .dialogue-content{padding:5px 8px 3px 0}
  #dialogue-box.treasury-officer .dialogue-content{padding:5px 0 3px 8px}
 }
+
+/* Stage 9 royal palace dialogue layout */
+#dialogue-box.king-student{flex-direction:row!important}
+#dialogue-box.king-student #dialogue-portrait{order:0;transform:none!important}
+#dialogue-box.king-student .dialogue-content{order:1}
+#dialogue-box.king-speaking{flex-direction:row-reverse!important}
+#dialogue-box.king-speaking #dialogue-portrait{order:0;transform:none!important}
+#dialogue-box.king-speaking .dialogue-content{order:1}
