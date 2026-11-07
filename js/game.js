@@ -929,6 +929,8 @@ function draw(){
   const img=image('npc_checkpoint_fullbody.png');if(img.complete&&img.naturalWidth){const w=checkpointOfficer.w,h=checkpointOfficer.h;ctx.drawImage(img,Math.round(checkpointOfficer.x-w/2),Math.round(ground-h),w,h);if(Math.abs(player.x-checkpointOfficer.x)<260){ctx.font='bold 20px system-ui';ctx.fillStyle='#fff6db';ctx.textAlign='center';ctx.fillText('เจ้าหน้าที่ด่านขนอน',checkpointOfficer.x,ground-h-9);}}
  }
  if(id==='royalPalace'){
+  const kingImg=image('king_narai_idle.png');
+  if(kingImg.complete&&kingImg.naturalWidth){const w=kingNarai.w,h=kingNarai.h;ctx.drawImage(kingImg,Math.round(kingNarai.x-w/2),Math.round(ground-h),w,h);}
   if(Math.abs(player.x-kingNarai.x)<260){ctx.font='bold 20px system-ui';ctx.fillStyle='#fff6db';ctx.textAlign='center';ctx.fillText('ชายปริศนา',kingNarai.x,ground-kingNarai.h-9);}
  }
  if(id==='treasury'){
