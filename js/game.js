@@ -22,6 +22,7 @@ const foreignExplorer={x:1035,w:250,h:365};
 const checkpointOfficer={x:1035,w:260,h:390};
 // Stage 8: treasury official stands to the right and faces the arriving student.
 const treasuryOfficer={x:1040,w:255,h:390};
+const kingNarai={x:1040,w:260,h:390};
 const images={};
 function image(path){if(!images[path]){const img=new Image();img.decoding='async';img.loading='eager';img.src=path;images[path]=img;}return images[path];}
 // เตรียมภาพฉากถัดไปล่วงหน้า เพื่อลดเวลารอเมื่อผู้เล่นเดินทางเปลี่ยนด่าน
@@ -38,6 +39,7 @@ function preloadDialoguePortraits(){
  files.push('foreign_explorer_friendly.png','foreign_explorer_explaining.png','foreign_explorer_pointing.png','foreign_explorer_surprised.png','foreign_explorer_laughing..png','foreign_explorer_welcoming.png');
  files.push('npc_checkpoint_inspect_document.png','npc_checkpoint_point_left.png','npc_checkpoint_celebrate.png','npc_checkpoint_show_emblem.png','npc_checkpoint_fullbody.png','npc_checkpoint_stop.png','npc_checkpoint_neutral.png');
  files.push('npc_treasury_idle.png','npc_treasury_wave.png','npc_treasury_present.png','npc_treasury_show_records.png','npc_treasury_point.png','npc_treasury_thinking.png','npc_treasury_full.png');
+ files.push('king_narai_welcome.png','king_narai_thinking.png','king_narai_determined.png','king_narai_idle.png','king_narai_stop.png','king_narai_teaching.png','king_narai_respect.png','king_narai_pointing.png');
  files.forEach(path=>{const img=image(path);if(typeof img.decode==='function')img.decode().catch(()=>{});});
 }
 // ภาพตัวละครและฉากอื่น ๆ จะถูกโหลดเมื่อจำเป็น
@@ -52,7 +54,8 @@ const scenes=[
  {id:'foreignTrade',bg:'foreign_trade_district_bg.png',objective:'ด่านที่ ๕ : เดินไปพูดคุยกับพ่อค้าชาวจีนในย่านการค้าต่างชาติ'},
  {id:'internationalPort',bg:'international_trade_port.png',objective:'ด่านที่ ๖ : เดินไปพูดคุยกับกัปตันฌองที่ท่าเรือการค้าต่างประเทศ'},
  {id:'checkpoint',bg:'checkpoint_gate.png',objective:'ด่านที่ ๗ : เดินไปพูดคุยกับเจ้าหน้าที่ประจำด่านขนอน'},
- {id:'treasury',bg:'scene_treasury.png',objective:'ด่านที่ ๘ : เดินไปพูดคุยกับเจ้าพนักงานพระคลังสินค้า'}
+ {id:'treasury',bg:'scene_treasury.png',objective:'ด่านที่ ๘ : เดินไปพูดคุยกับเจ้าพนักงานพระคลังสินค้า'},
+ {id:'royalPalace',bg:'stage9_palace_background.png',objective:'ด่านที่ ๙ : เดินสำรวจพระราชวังและพบชายปริศนา'}
 ];
 // Display a clear loading state while the current scene's actual image is downloading.
 let loadingRequest=0;
@@ -138,7 +141,9 @@ function showDialogueLine(){
  dialogueBox.classList.toggle('checkpoint-officer',sceneIndex===9&&d.who==='checkpointOfficer');
  dialogueBox.classList.toggle('treasury-student',sceneIndex===10&&d.who==='student');
  dialogueBox.classList.toggle('treasury-officer',sceneIndex===10&&d.who==='treasuryOfficer');
- speaker.textContent=d.who==='farmer'?'ชาวนา':d.who==='boatman'?'คนพายเรือ':d.who==='merchant'?'แม่ค้า':d.who==='portOfficer'?'นายท่ารับสินค้า':d.who==='chineseMerchant'?'พ่อค้าชาวจีน':d.who==='foreignExplorer'?'กัปตันฌอง':d.who==='checkpointOfficer'?'เจ้าหน้าที่ด่านขนอน':d.who==='treasuryOfficer'?'เจ้าพนักงานพระคลังสินค้า':playerName;
+ dialogueBox.classList.toggle('king-student',sceneIndex===11&&d.who==='student');
+ dialogueBox.classList.toggle('king-speaking',sceneIndex===11&&d.who==='kingNarai');
+ speaker.textContent=d.who==='farmer'?'ชาวนา':d.who==='boatman'?'คนพายเรือ':d.who==='merchant'?'แม่ค้า':d.who==='portOfficer'?'นายท่ารับสินค้า':d.who==='chineseMerchant'?'พ่อค้าชาวจีน':d.who==='foreignExplorer'?'กัปตันฌอง':d.who==='checkpointOfficer'?'เจ้าหน้าที่ด่านขนอน':d.who==='treasuryOfficer'?'เจ้าพนักงานพระคลังสินค้า':d.who==='kingNarai'?'ชายปริศนา':playerName;
  dialogueText.textContent=typeof d.text==='function'?d.text():d.text;
  portrait.classList.remove('hidden');
  let portraitPath;
@@ -150,6 +155,7 @@ function showDialogueLine(){
  else if(d.who==='foreignExplorer')portraitPath=({normal:'foreign_explorer_friendly.png',smile:'foreign_explorer_welcoming.png',explain:'foreign_explorer_explaining.png',point:'foreign_explorer_pointing.png',surprised:'foreign_explorer_surprised.png',laugh:'foreign_explorer_laughing..png',proud:'foreign_explorer_welcoming.png'})[d.emotion]||'foreign_explorer_friendly.png';
  else if(d.who==='checkpointOfficer')portraitPath=({normal:'npc_checkpoint_neutral.png',stop:'npc_checkpoint_stop.png',proud:'npc_checkpoint_show_emblem.png',explain:'npc_checkpoint_inspect_document.png',inspect:'npc_checkpoint_inspect_document.png',point:'npc_checkpoint_point_left.png',celebrate:'npc_checkpoint_celebrate.png'})[d.emotion]||'npc_checkpoint_neutral.png';
  else if(d.who==='treasuryOfficer')portraitPath=({normal:'npc_treasury_idle.png',wave:'npc_treasury_wave.png',proud:'npc_treasury_present.png',present:'npc_treasury_present.png',records:'npc_treasury_show_records.png',explain:'npc_treasury_show_records.png',point:'npc_treasury_point.png',thinking:'npc_treasury_thinking.png'})[d.emotion]||'npc_treasury_idle.png';
+ else if(d.who==='kingNarai')portraitPath=({normal:'king_narai_idle.png',welcome:'king_narai_welcome.png',thinking:'king_narai_thinking.png',determined:'king_narai_determined.png',stop:'king_narai_stop.png',teaching:'king_narai_teaching.png',respect:'king_narai_respect.png',pointing:'king_narai_pointing.png'})[d.emotion]||'king_narai_idle.png';
  else portraitPath='student-'+selectedGender+'-'+d.emotion+'.webp';
  const portraitAsset=image(portraitPath);
  // Do not display the previous speaker while a new portrait is downloading.
@@ -192,7 +198,7 @@ function advanceDialogue(){
 previousBtn.addEventListener('click',goBackDialogue);
 nextBtn.addEventListener('click',advanceDialogue);
 function startGame(){
- showScreen('game-screen');sceneIndex=0;coinFound=false;farmerTalked=false;quizActive=false;quizShowingResult=false;quizRetrying=false;stage1Passed=false;stage2Passed=false;stage3Passed=false;stage4Passed=false;portIntroSeen=false;stage5Passed=false;stage6Passed=false;stage7Passed=false;stage8Passed=false;farmIntroSeen=false;player.x=150;
+ showScreen('game-screen');sceneIndex=0;coinFound=false;farmerTalked=false;quizActive=false;quizShowingResult=false;quizRetrying=false;stage1Passed=false;stage2Passed=false;stage3Passed=false;stage4Passed=false;portIntroSeen=false;stage5Passed=false;stage6Passed=false;stage7Passed=false;stage8Passed=false;stage9Passed=false;stage9IntroSeen=false;farmIntroSeen=false;player.x=150;
  objective.textContent=scenes[0].objective;prompt.classList.add('hidden');
   preloadScene(0);preloadScene(1);
  if(!started){started=true;last=performance.now();requestAnimationFrame(frame);}
@@ -528,6 +534,54 @@ function openTreasuryQuiz(){quizIndex=0;quizScore=0;quizShowingResult=false;quiz
 function renderTreasuryQuizQuestion(){const item=treasuryQuiz[quizIndex];quizHeading.textContent='ด่านที่ ๘ : พระคลังสินค้า';quizProgress.textContent='ข้อ '+(quizIndex+1)+' / '+treasuryQuiz.length;quizQuestion.textContent=item.q;quizAnswers.replaceChildren();quizFeedback.textContent='';quizNextBtn.classList.add('hidden');item.options.forEach((option,index)=>{const button=document.createElement('button');button.type='button';button.className='quiz-answer';button.textContent=['ก','ข','ค','ง'][index]+'. '+option;button.addEventListener('click',()=>handleStageQuizAnswer(index,treasuryQuiz,['ก','ข','ค','ง'],'ยังไม่ถูกต้องนะ! คำใบ้: '+item.hint+' ลองเลือกคำตอบใหม่อีกครั้ง'));quizAnswers.append(button);});}
 function finishTreasuryQuiz(){quizShowingResult=true;stage8Passed=true;quizHeading.textContent='สรุปผลด่านที่ ๘';quizProgress.textContent='คะแนน '+quizScore+' / '+treasuryQuiz.length;quizQuestion.textContent='ยอดเยี่ยม! ผ่านด่านพระคลังสินค้าแล้ว';quizAnswers.replaceChildren();quizFeedback.textContent='เจ้าได้เรียนรู้หน้าที่ของพระคลังสินค้า การตรวจนับและเก็บรักษาสินค้า รวมถึงความสำคัญต่อกิจการค้าของกรุงศรีอยุธยาแล้ว';quizNextBtn.textContent='จบด่านที่ ๘ ✓';quizNextBtn.classList.remove('hidden');}
 
+
+function kingNaraiLine(text,emotion='normal'){return {who:'kingNarai',emotion,text};}
+function kingNaraiDialogueLines(){
+ return [
+  student(()=>genderWord('ว้าว! วังอะไรสวยงามขนาดนี้นะ ที่นี่คือที่ไหนกัน?','ว้าว! วังอะไรสวยงามขนาดนี้นะ ที่นี่คือที่ไหนกัน?'),'curious'),
+  kingNaraiLine('เจ้าเองสินะ... ผู้เดินทางที่หลงเข้ามาในกรุงศรีอยุธยา ตามคำทำนายของโหรหลวง','thinking'),
+  student(()=>genderWord('เอ๊ะ! ท่านรู้เรื่องของผมด้วยหรือครับ? แล้วท่านเป็นใครหรือครับ?','เอ๊ะ! ท่านรู้เรื่องของหนูด้วยหรือคะ? แล้วท่านเป็นใครหรือคะ?'),'surprised'),
+  kingNaraiLine('ฮ่า ๆ อย่าเพิ่งสงสัยไปเลย เรียกข้าว่าเป็นผู้ดูแลบ้านเมืองแห่งนี้ก็แล้วกัน แล้วเจ้าล่ะ มีชื่อว่าอะไร?','welcome'),
+  student(()=>genderWord('ผมชื่อ '+playerName+' ครับ','หนูชื่อ '+playerName+' ค่ะ'),'normal'),
+  student(()=>genderWord('ผมเดินทางสำรวจที่ต่าง ๆ มาเรื่อย ๆ หวังว่าจะหาทางกลับบ้าน แต่ตอนนี้ไม่รู้ด้วยซ้ำว่าอยู่ที่ไหนแล้วครับ','หนูเดินทางสำรวจที่ต่าง ๆ มาเรื่อย ๆ หวังว่าจะหาทางกลับบ้าน แต่ตอนนี้ไม่รู้ด้วยซ้ำว่าอยู่ที่ไหนแล้วค่ะ'),'worried'),
+  kingNaraiLine('อย่าเพิ่งกังวลไป ข้าว่าข้าพอจะมีวิธีช่วยเจ้าได้','respect'),
+  kingNaraiLine('จากที่เจ้าเดินทางสำรวจกรุงศรีอยุธยามา เจ้าคงได้เรียนรู้เรื่องราวต่าง ๆ มากมาย แล้วเจ้าจำอะไรได้บ้างเล่า?','teaching'),
+  student(()=>genderWord('ผมได้เรียนรู้วิถีชีวิตของผู้คน การค้าขายกับชาวต่างชาติ การตรวจสินค้า การเก็บจังกอบ และหน้าที่ของพระคลังสินค้าครับ','หนูได้เรียนรู้วิถีชีวิตของผู้คน การค้าขายกับชาวต่างชาติ การตรวจสินค้า การเก็บจังกอบ และหน้าที่ของพระคลังสินค้าค่ะ'),'explain'),
+  kingNaraiLine('ดีมาก! ถ้าเช่นนั้น ข้าจะมอบบททดสอบให้เจ้า ๑๐ ข้อ หากเจ้าตอบคำถามได้ เจ้าก็จะมีโอกาสกลับไปยังโลกของเจ้าได้','determined')
+ ];
+}
+const finalRoyalQuiz=[
+ {q:'กรุงศรีอยุธยาตั้งอยู่บริเวณใด จึงเหมาะแก่การเพาะปลูก?',options:['ที่ราบลุ่มแม่น้ำเจ้าพระยา','ยอดเขาสูง','ทะเลทราย'],answer:0,explain:'ที่ราบลุ่มแม่น้ำมีดินอุดมสมบูรณ์และมีน้ำเหมาะแก่การเพาะปลูก'},
+ {q:'พาหนะใดมีความสำคัญต่อการเดินทางและขนส่งสินค้าในอยุธยา?',options:['รถไฟ','เรือ','เครื่องบิน'],answer:1,explain:'แม่น้ำและลำคลองทำให้เรือเป็นพาหนะสำคัญในการเดินทางและขนส่ง'},
+ {q:'ตลาดในกรุงศรีอยุธยามีสินค้าหลากหลายเพราะเหตุใด?',options:['มีแต่สินค้าจากในวัง','มีเฉพาะสินค้าจากต่างประเทศ','ผู้คนนำสินค้าจากชุมชน หัวเมือง และต่างประเทศมาค้าขาย'],answer:2,explain:'สินค้ามาจากหลายแหล่ง ทั้งชุมชน หัวเมือง และพ่อค้าต่างชาติ'},
+ {q:'สินค้าจากหัวเมืองถูกนำเข้าสู่พระนครผ่านสถานที่ใด?',options:['ท่ารับสินค้าจากหัวเมือง','โรงเรียนหลวง','สนามฝึกทหาร'],answer:0,explain:'ท่ารับสินค้าจากหัวเมืองเป็นจุดรับและขนถ่ายสินค้าที่เดินทางมาทางเรือ'},
+ {q:'ข้อใดเป็นสินค้าที่พ่อค้าชาวจีนนำมาขายในอยุธยา?',options:['รถยนต์และเครื่องจักร','เครื่องเคลือบ ผ้าไหม ผ้าแพร และกระทะเหล็ก','น้ำมันและพลาสติก'],answer:1,explain:'พ่อค้าชาวจีนนำเครื่องเคลือบ ผ้าไหม ผ้าแพร และกระทะเหล็กมาค้าขาย'},
+ {q:'ข้อใดเป็นสินค้าจากฝรั่งเศสที่กล่าวถึงในด่านท่าเรือการค้าต่างประเทศ?',options:['ข้าวและเกลือ','ไม้กฤษณาและงาช้าง','แป้งสาลีและสินค้าหัตถกรรม'],answer:2,explain:'กัปตันชาวฝรั่งเศสนำแป้งสาลีและสินค้าหัตถกรรมมาขาย'},
+ {q:'เงินที่เก็บจากสินค้าที่ผ่านด่านขนอนเรียกว่าอะไร?',options:['จังกอบ','จิ้มก้อง','ฤชา'],answer:0,explain:'จังกอบคือภาษีสินค้าผ่านด่านหรือภาษีปากเรือในสมัยอยุธยา'},
+ {q:'การค้าผูกขาดในสมัยอยุธยาหมายถึงอะไร?',options:['ทุกคนซื้อขายสินค้าได้โดยไม่มีข้อกำหนด','สินค้าบางชนิดต้องซื้อขายผ่านพระคลังสินค้าเท่านั้น','ห้ามค้าขายกับต่างประเทศ'],answer:1,explain:'สินค้าบางชนิดถูกกำหนดให้ซื้อขายผ่านพระคลังสินค้าเพื่อให้ราชสำนักควบคุมการค้า'},
+ {q:'ข้อใดเป็นตัวอย่างสินค้าส่งออกของกรุงศรีอยุธยา?',options:['โทรศัพท์และคอมพิวเตอร์','รถยนต์และเครื่องใช้ไฟฟ้า','ดีบุก พริกไทย ครั่ง และขี้ผึ้ง'],answer:2,explain:'อยุธยาส่งออกสินค้าหลายชนิด เช่น ดีบุก พริกไทย ครั่ง ขี้ผึ้ง และหนังสัตว์'},
+ {q:'คำว่า “จิ้มก้อง” เกี่ยวข้องกับความสัมพันธ์ระหว่างอยุธยากับจีนอย่างไร?',options:['การส่งคณะทูตพร้อมเครื่องราชบรรณาการไปถวายจักรพรรดิจีน','การเก็บเงินจากเรือที่ผ่านด่าน','การซื้อขายสินค้าในตลาดท้องถิ่น'],answer:0,explain:'จิ้มก้องเป็นระบบความสัมพันธ์แบบบรรณาการที่เกี่ยวข้องกับการค้าระหว่างอยุธยากับจีน'}
+];
+function openRoyalQuiz(){quizIndex=0;quizScore=0;quizShowingResult=false;quizRetrying=false;quizActive=true;quizPanel.classList.remove('hidden');renderRoyalQuizQuestion();}
+function renderRoyalQuizQuestion(){
+ const item=finalRoyalQuiz[quizIndex];quizHeading.textContent='บททดสอบสุดท้ายแห่งกรุงศรีอยุธยา';quizProgress.textContent='ข้อ '+(quizIndex+1)+' / '+finalRoyalQuiz.length;quizQuestion.textContent=item.q;quizAnswers.replaceChildren();quizFeedback.textContent='';quizNextBtn.classList.add('hidden');
+ item.options.forEach((option,index)=>{const button=document.createElement('button');button.type='button';button.className='quiz-answer';button.textContent=['ก','ข','ค'][index]+'. '+option;button.addEventListener('click',()=>handleStageQuizAnswer(index,finalRoyalQuiz,['ก','ข','ค'],'ยังไม่ถูกต้องนะ! ลองทบทวนความรู้จากด่านที่ผ่านมาแล้วเลือกใหม่อีกครั้ง'));quizAnswers.append(button);});
+}
+function finishRoyalQuiz(){
+ quizShowingResult=true;stage9Passed=true;quizHeading.textContent='สรุปผลบททดสอบสุดท้าย';quizProgress.textContent='คะแนน '+quizScore+' / '+finalRoyalQuiz.length;quizQuestion.textContent='ทำแบบทดสอบครบทั้ง ๑๐ ข้อแล้ว!';quizAnswers.replaceChildren();quizFeedback.textContent='เจ้าได้ทบทวนความรู้เรื่องวิถีชีวิต การเดินทาง การค้า ด่านขนอน และพระคลังสินค้าของกรุงศรีอยุธยาแล้ว';quizNextBtn.textContent='รับฟังคำเฉลยและกลับบ้าน ▶';quizNextBtn.classList.remove('hidden');
+}
+function royalEndingDialogue(){
+ return [
+  kingNaraiLine('เจ้าทำได้ดีมาก! เจ้าได้พิสูจน์แล้วว่าเรียนรู้เรื่องราวของกรุงศรีอยุธยาได้มากเพียงใด','proud'),
+  student(()=>genderWord('ท่านช่วยผมกลับบ้านได้จริง ๆ หรือครับ?','ท่านช่วยหนูกลับบ้านได้จริง ๆ หรือคะ?'),'surprised'),
+  kingNaraiLine('แน่นอน ก่อนอื่นข้าขอบอกความจริงแก่เจ้า... ข้าคือสมเด็จพระนารายณ์มหาราช ผู้ปกครองกรุงศรีอยุธยาแห่งนี้!','welcome'),
+  student(()=>genderWord('หา! ท่านคือสมเด็จพระนารายณ์มหาราชหรือครับ! ผมไม่เคยคิดว่าจะได้เข้าเฝ้าพระองค์เลย','หา! ท่านคือสมเด็จพระนารายณ์มหาราชหรือเพคะ! หนูไม่เคยคิดว่าจะได้พบพระองค์เลยค่ะ'),'surprised'),
+  kingNaraiLine('จงจำไว้ว่าประวัติศาสตร์มิใช่เพียงเรื่องราวในอดีต แต่เป็นบทเรียนที่ช่วยให้เราเข้าใจผู้คนและบ้านเมืองในวันนี้','respect'),
+  kingNaraiLine('ประตูแห่งกาลเวลากำลังเปิดออกแล้ว จงเดินทางกลับโดยสวัสดิภาพ และอย่าลืมเรื่องราวที่เจ้าได้เรียนรู้จากกรุงศรีอยุธยา','pointing'),
+  student(()=>genderWord('ขอบพระทัยพระองค์มากครับ ผมจะไม่มีวันลืมการเดินทางครั้งนี้เลย','ขอบพระทัยพระองค์มากเพคะ หนูจะไม่มีวันลืมการเดินทางครั้งนี้เลยค่ะ'),'smile')
+ ];
+}
+
 // ===== แบบทดสอบด่านที่ ๓: ตลาดในกรุงศรีอยุธยา =====
 const marketQuiz=[
  {q:'ตลาดหน้าคุกเป็นสถานที่สำหรับทำอะไร?',options:['เป็นสถานที่ฝึกทหาร','เป็นสถานที่ซื้อขายและแลกเปลี่ยนสินค้า','เป็นสถานที่ประกอบพิธีกรรม'],answer:1,explain:'ตลาดเป็นแหล่งที่ผู้คนนำสินค้ามาซื้อขายและแลกเปลี่ยนกัน'},
@@ -653,7 +707,8 @@ function finishFarmerQuiz(){
  quizNextBtn.classList.remove('hidden');
 }
 quizNextBtn.addEventListener('click',()=>{
- const isTreasuryQuiz=quizHeading.textContent.includes('ด่านที่ ๘')||quizHeading.textContent.includes('สรุปผลด่านที่ ๘');if(isTreasuryQuiz){if(quizShowingResult){quizPanel.classList.add('hidden');quizActive=false;objective.textContent='ผ่านด่านที่ ๘ แล้ว! สำรวจพระคลังสินค้าได้ตามสบาย';return;}if(quizIndex<treasuryQuiz.length-1){quizIndex++;renderTreasuryQuizQuestion();}else finishTreasuryQuiz();return;}
+ const isRoyalQuiz=quizHeading.textContent.includes('บททดสอบสุดท้าย')||quizHeading.textContent.includes('สรุปผลบททดสอบสุดท้าย');if(isRoyalQuiz){if(quizShowingResult){quizPanel.classList.add('hidden');quizActive=false;openDialogue(royalEndingDialogue(),()=>{quizPanel.classList.remove('hidden');quizHeading.textContent='การเดินทางสิ้นสุดลงแล้ว';quizProgress.textContent='ภารกิจสำเร็จ';quizQuestion.textContent='ยินดีด้วย '+playerName+'! เจ้ากลับสู่โลกปัจจุบันแล้ว';quizAnswers.replaceChildren();quizFeedback.textContent='อดีตคือรากฐานของปัจจุบัน และประวัติศาสตร์คือบทเรียนสำหรับอนาคต';quizNextBtn.classList.add('hidden');quizActive=true;});return;}if(quizIndex<finalRoyalQuiz.length-1){quizIndex++;renderRoyalQuizQuestion();}else finishRoyalQuiz();return;}
+ const isTreasuryQuiz=quizHeading.textContent.includes('ด่านที่ ๘')||quizHeading.textContent.includes('สรุปผลด่านที่ ๘');if(isTreasuryQuiz){if(quizShowingResult){quizPanel.classList.add('hidden');quizActive=false;objective.textContent='ผ่านด่านที่ ๘ แล้ว! เดินทางต่อไปยังพระราชวังหลวง';return;}if(quizIndex<treasuryQuiz.length-1){quizIndex++;renderTreasuryQuizQuestion();}else finishTreasuryQuiz();return;}
  const isCheckpointQuiz=quizHeading.textContent.includes('ด่านที่ ๗')||quizHeading.textContent.includes('สรุปผลด่านที่ ๗');if(isCheckpointQuiz){if(quizShowingResult){quizPanel.classList.add('hidden');quizActive=false;objective.textContent='ผ่านด่านที่ ๗ แล้ว! เดินทางต่อไปยังลานเรียนรู้รายได้แผ่นดิน';return;}if(quizIndex<checkpointQuiz.length-1){quizIndex++;renderCheckpointQuizQuestion();}else finishCheckpointQuiz();return;}
  const isInternationalPortQuiz=quizHeading.textContent.includes('ด่านที่ ๖')||quizHeading.textContent.includes('สรุปผลด่านที่ ๖');if(isInternationalPortQuiz){if(quizShowingResult){quizPanel.classList.add('hidden');quizActive=false;objective.textContent='ผ่านด่านที่ ๖ แล้ว! เดินทางต่อไปยังด่านขนอนได้';return;}if(quizIndex<internationalPortQuiz.length-1){quizIndex++;renderInternationalPortQuizQuestion();}else finishInternationalPortQuiz();return;}
  const isForeignTradeQuiz=quizHeading.textContent.includes('ด่านที่ ๕')||quizHeading.textContent.includes('สรุปผลด่านที่ ๕');if(isForeignTradeQuiz){if(quizShowingResult){quizPanel.classList.add('hidden');quizActive=false;objective.textContent='ผ่านด่านที่ ๕ แล้ว! สำรวจย่านการค้าต่างชาติได้ตามสบาย';return;}if(quizIndex<foreignTradeQuiz.length-1){quizIndex++;renderForeignTradeQuizQuestion();}else finishForeignTradeQuiz();return;}
@@ -708,6 +763,7 @@ function interact(){
  if(quizActive)return;
  if(dialogue){advanceDialogue();return;}
  const s=scenes[sceneIndex].id;
+ if(s==='royalPalace'&&Math.abs(player.x-kingNarai.x)<390){if(stage9Passed)openDialogue(royalEndingDialogue());else openDialogue(kingNaraiDialogueLines(),openRoyalQuiz);return;}
  if(s==='treasury'&&Math.abs(player.x-treasuryOfficer.x)<370){if(stage8Passed)openDialogue(treasuryDialogueLines());else openDialogue(treasuryDialogueLines(),openTreasuryQuiz);return;}
  if(s==='checkpoint'&&Math.abs(player.x-checkpointOfficer.x)<360){if(stage7Passed)openDialogue(checkpointDialogueLines());else openDialogue(checkpointDialogueLines(),openCheckpointQuiz);return;}
   if(s==='internationalPort'&&Math.abs(player.x-foreignExplorer.x)<350){if(stage6Passed)openDialogue(internationalPortDialogueLines());else openDialogue(internationalPortDialogueLines(),openInternationalPortQuiz);return;}
@@ -803,7 +859,9 @@ function update(dt){
  if(id==='foreignTrade'&&Math.abs(player.x-chineseMerchant.x)<330)message=stage5Passed?'กด E เพื่อทบทวนบทสนทนากับพ่อค้าชาวจีน':'กด E เพื่อพูดคุยกับพ่อค้าชาวจีน';
  if(id==='internationalPort'&&Math.abs(player.x-foreignExplorer.x)<350)message=stage6Passed?'กด E เพื่อทบทวนบทสนทนากับกัปตันฌอง':'กด E เพื่อพูดคุยกับกัปตันฌอง';
  if(id==='checkpoint'&&Math.abs(player.x-checkpointOfficer.x)<360)message=stage7Passed?'กด E เพื่อทบทวนบทสนทนากับเจ้าหน้าที่ด่านขนอน':'กด E เพื่อพูดคุยกับเจ้าหน้าที่ด่านขนอน';
+ if(id==='royalPalace'&&player.x>worldWidth-145&&stage9Passed){objective.textContent='ภารกิจสำเร็จ! เจ้าได้กลับสู่โลกปัจจุบันแล้ว';}
  if(id==='treasury'&&Math.abs(player.x-treasuryOfficer.x)<370)message=stage8Passed?'กด E เพื่อทบทวนบทสนทนากับเจ้าพนักงานพระคลังสินค้า':'กด E เพื่อพูดคุยกับเจ้าพนักงานพระคลังสินค้า';
+ if(id==='royalPalace'&&Math.abs(player.x-kingNarai.x)<390)message=stage9Passed?'กด E เพื่อพบชายปริศนาอีกครั้ง':'กด E เพื่อพูดคุยกับชายปริศนา';
  prompt.textContent=message;prompt.classList.toggle('hidden',!message);
 }
 function drawBackground(){
@@ -869,6 +927,9 @@ function draw(){
  }
  if(id==='checkpoint'){
   const img=image('npc_checkpoint_fullbody.png');if(img.complete&&img.naturalWidth){const w=checkpointOfficer.w,h=checkpointOfficer.h;ctx.drawImage(img,Math.round(checkpointOfficer.x-w/2),Math.round(ground-h),w,h);if(Math.abs(player.x-checkpointOfficer.x)<260){ctx.font='bold 20px system-ui';ctx.fillStyle='#fff6db';ctx.textAlign='center';ctx.fillText('เจ้าหน้าที่ด่านขนอน',checkpointOfficer.x,ground-h-9);}}
+ }
+ if(id==='royalPalace'){
+  if(Math.abs(player.x-kingNarai.x)<260){ctx.font='bold 20px system-ui';ctx.fillStyle='#fff6db';ctx.textAlign='center';ctx.fillText('ชายปริศนา',kingNarai.x,ground-kingNarai.h-9);}
  }
  if(id==='treasury'){
   const img=image('npc_treasury_full.png');
